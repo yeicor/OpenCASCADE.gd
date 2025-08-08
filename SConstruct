@@ -38,6 +38,13 @@ print("LINK (Linker):", env.get('LINK', 'Not found'))
 print("AR (Archiver):", env.get('AR', 'Not found'))
 print(env.Dump())
 
+# For every env variable ending in COM, add a corresponding COMSTR one with the same value.
+to_add = {}
+for key, value in env.items():
+    if key.endswith("COM"):
+        to_add[key.replace("COM", "COMSTR")] = '\n' + value
+env.Append(**to_add)
+
 if not env.get("skip_vcpkg_install"):
     # Build the vcpkg library for the requested platform and architecture.
     vcpkg_dir = os.path.join(os.getcwd(), "vcpkg")
