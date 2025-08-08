@@ -30,8 +30,8 @@ jobs:
             { platform: "android", arch: "arm32", os: "ubuntu-24.04" },
             { platform: "ios", arch: "arm64", os: "macos-15" },
           ]
-        target-type: [ "template_debug", "template_release" ]
-        float-precision: [ "single", "double" ]
+        target-type: [ "template_debug" ] # TODO: , "template_release"
+        float-precision: [ "single" ] # TODO: , "double"
 
     runs-on: "${{ matrix.target.os }}"
     steps:

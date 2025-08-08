@@ -14,8 +14,8 @@ subprocess.run(["git", "submodule", "update", "--init", "--recursive"], check=Tr
 vcpkg_root = os.path.join(os.getcwd(), "vcpkg")
 vcpkg_exe = os.path.join(vcpkg_root, "vcpkg")
 if not os.path.exists(vcpkg_exe):
-    vcpkg_bootstrap = os.path.join(vcpkg_root, "bootstrap-vcpkg.sh")
-    subprocess.run([vcpkg_bootstrap, "--disableMetrics"], check=True)
+    vcpkg_bootstrap = os.path.join(".", "bootstrap-vcpkg." + ("bat" if sys.platform == "win32" else "sh"))
+    subprocess.run([vcpkg_bootstrap, "--disableMetrics"], check=True, cwd=vcpkg_root)
 
 # Custom variables
 vars = Variables()
