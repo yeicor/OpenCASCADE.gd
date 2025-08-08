@@ -37,6 +37,7 @@ if sys.platform != "win32": env.Append(**{k.replace("COM", "COMSTR"): '\n'+v for
 vcpkg_dir = os.path.join(os.getcwd(), "vcpkg")
 vcpkg_platform = { "macos": "osx", "web": "emscripten" }.get(env.get("platform"), env.get("platform"))
 vcpkg_architecture = { "x86_64": "x64", "x86_32": "x86", "arm32": "arm" }.get(env.get("arch"), env.get("arch"))
+if vcpkg_platform == "android" and vcpkg_architecture == "arm": vcpkg_architecture = "arm-neon" # More up to date NDK
 vcpkg_custom_triplet_folder = os.path.join(os.getcwd(), "vcpkg_triplets")
 vcpkg_triplet = "{}-{}".format(vcpkg_architecture, vcpkg_platform)
 # Disabled optional dependencies:
