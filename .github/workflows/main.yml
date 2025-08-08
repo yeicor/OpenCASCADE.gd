@@ -39,8 +39,16 @@ jobs:
         with:
           submodules: "recursive"
 
+      # <Platform/arch-specific setup>
       - if: "${{ matrix.target.platform == 'linux' && matrix.target.arch == 'x86_32' }}"
         run: "sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib"
+      - if: "${{ matrix.target.os == 'ubuntu-24.04' || matrix.target.os == 'ubuntu-24.04-arm' }}"
+        run: "sudo apt-get update && sudo apt-get install -y libx11-dev libgl1-mesa-dev libfontconfig-dev"
+      - if: "${{ matrix.target.os == 'macos-15'}}"
+        run: "brew install autoconf automake autoconf-archive"
+      - if: "${{ matrix.target.platform == 'android' && matrix.target.arch == 'arm32' }}"
+        run: "sudo apt-get update && sudo apt-get install -y g*-arm-linux*"
+      # </Platform/arch-specific setup>
 
       - uses: "./godot-cpp/.github/actions/setup-godot-cpp"
         with:

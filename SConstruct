@@ -3,6 +3,7 @@ import os
 import sys
 import re
 import subprocess
+import shutil
 
 libname = "OpenCASCADE.gd"
 
@@ -26,14 +27,28 @@ env.SConsignFile("${variant_dir}/.sconsign")
 
 # Build the vcpkg library for the requested platform and architecture.
 vcpkg_dir = os.path.join(os.getcwd(), "vcpkg")
-vcpkg_platform = { "macos": "osx" }.get(env.get("platform"), env.get("platform"))
-vcpkg_architecture = { "x86_64": "x64", "x86_32": "x86", "arm32": "arm" }.get(env.get("arch"), env.get("arch"))
-vcpkg_triplet = "{}-{}".format(vcpkg_architecture, vcpkg_platform)
-subprocess.run(['./vcpkg', 'install', 'opencascade[freetype,rapidjson,freeimage]', '--triplet', vcpkg_triplet], check=True, cwd=vcpkg_dir)
+vcpkg_platform = { "macos": "osx", "web": "emscripten" }.get(env.get("platform"), env.get("platform"))
+vcpkg_architectures = { "x86_64": "x64", "x86_32": "x86", "arm32": "arm", "universal": "x64-osx,arm64-osx" } \
+        .get(env.get("arch"), env.get("arch"))
+for vcpkg_architecture in vcpkg_architectures.split(","):
+    vcpkg_triplet = "{}-{}".format(vcpkg_architecture, vcpkg_platform)
+    subprocess.run(['./vcpkg', 'install', 'opencascade[freetype,rapidjson,freeimage]', '--triplet', vcpkg_triplet], check=True, cwd=vcpkg_dir)
 
 # Find all the static libraries built by vcpkg to link against.
-vcpkg_include_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "include")
 vcpkg_lib_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "lib")
+if ',' in vcpkg_architectures: # Hack for universal macs: need to combine multiple architectures into one for each library.
+    vcpkg_triplet = 'universal-osx'
+    new_vcpkg_lib_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "lib")
+    def lipo_cmd(lib_fname):
+        return ['lipo'] + \
+            [os.path.join(vcpkg_dir, "installed", arch, lib_fname) for a in vcpkg_architectures.split(',')] + \
+            ['-output', os.path.join(new_vcpkg_lib_dir, lib_fname), '-create']
+    for lib_fname in os.listdir(vcpkg_lib_dir):
+        if lib_fname.endswith(".a"):
+            subprocess.run(lipo_cmd(lib_fname), check=True)
+    shutil.copytree(vcpkg_include_dir, os.path.join(new_vcpkg_lib_dir, "..", "include")) # Copy any arch's headers
+    vcpkg_lib_dir = new_vcpkg_lib_dir
+vcpkg_include_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "include")
 vcpkg_libs = [os.path.basename(l) for l in os.listdir(vcpkg_lib_dir) if l.endswith((".a", ".lib"))]
 vcpkg_libs = [re.replace(r'^lib', '', re.replace(r'\.(a|.lib)$', '', lib)) for lib in vcpkg_libs]
 env.Append(LIBPATH=vcpkg_lib_dir, LIBS=vcpkg_libs, INCLUDE=vcpkg_include_dir)
