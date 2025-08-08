@@ -65,7 +65,7 @@ jobs:
         uses: "nttld/setup-ndk@v1"
         id: "setup-ndk"
         with:
-          ndk-version: "r28c"
+          ndk-version: "r23c" # Same as https://github.com/godotengine/godot/blob/<GODOT_VERSION>/platform/android/detect.py
           link-to-sdk: true
       - if: "matrix.target.platform == 'android'"
         run: 'echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV'
@@ -101,7 +101,7 @@ jobs:
         if: "always()"
         with:
           key: "${{ steps.scons-cache.outputs.cache-primary-key }}"
-          path: "build\n**/*.o\n**/*.a\n**/*.os**/*.so\n**/*.dylib\n**/*.dll\n**/*.pdb\n**/*.exp\n**/*.lib" # Hopefully simplified to just "build" when out of tree build is implemented.
+          path: "./.scons-cache/" # When out of tree build is implemented, "build" can also be cached for even faster builds
       - uses: "actions/cache/save@v4"
         if: "always()"
         with:
