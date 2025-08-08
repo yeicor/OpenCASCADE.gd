@@ -58,7 +58,7 @@ jobs:
         with:
           version: "4.0.12" # More recent than Godot's default, since we need allow-multiple-definition support
       - if: "matrix.target.platform == 'web'"
-        run: "echo 'LDFLAGS=\"-Wl,-allow-multiple-definition\"' >> $GITHUB_ENV"
+        run: "echo 'LDFLAGS=\"-Wl,-allow-multiple-definition\"' >> $GITHUB_ENV && echo 'scons_extra_args=\"threads=no\"' >> $GITHUB_ENV"
       - if: "matrix.target.platform == 'android'"
         uses: "nttld/setup-ndk@v1"
         id: "setup-ndk"
@@ -86,15 +86,10 @@ jobs:
           key: "vcpkg-${{ matrix.target.platform }}-${{ matrix.target.arch }}"
           path: "."
 
-      - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no"
+      - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no  ${scons_extra_args}"
         env:
           SCONS_CACHE: "./.scons-cache/"
           VCPKG_DISABLE_METRICS: "1"
-
-      - uses: "./godot-cpp/.github/actions/godot-cache-save"
-        with:
-          scons-cache: "./.scons-cache/"
-          cache-name: "${{ matrix.target.platform }}_${{ matrix.target.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}"
 
       - uses: "actions/cache/save@v4"
         if: "always()"

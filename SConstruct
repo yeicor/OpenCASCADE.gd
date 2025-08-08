@@ -31,7 +31,7 @@ env = SConscript("godot-cpp/SConstruct", {'env': localEnv})
 env.SConsignFile("${variant_dir}/.sconsign")
 
 # For every env variable ending in COM, add a corresponding COMSTR one with the same value (i.e. print the command).
-if sys.platform != "win32": env.Append(**{k.replace("COM", "COMSTR"): '\n'+v for k, v in env.items() if k.endswith("COM")})
+env.Append(**{k.replace("COM", "COMSTR"): '\n'+v.replace(k, "_" + k) for k, v in env.items() if k.endswith("COM")})
 
 # Follow a little the convention: copy CC, CXX... if they are set in the environment.
 c_vars = ["CC", "CXX", "CPP", "AR", "RANLIB", "STRIP", "CFLAGS", "CXXFLAGS", "CPPFLAGS", "LDFLAGS"]
@@ -40,26 +40,27 @@ for var in c_vars:
         env[var] = os.environ[var]
 
 # Build the vcpkg library for the requested platform and architecture.
-vcpkg_dir = os.path.join(os.getcwd(), "vcpkg")
-vcpkg_platform = { "macos": "osx", "web": "emscripten" }.get(env.get("platform"), env.get("platform"))
-vcpkg_architecture = { "x86_64": "x64", "x86_32": "x86", "arm32": "arm" }.get(env.get("arch"), env.get("arch"))
-if vcpkg_platform == "android" and vcpkg_architecture == "arm": vcpkg_architecture = "arm-neon" # More up to date NDK
-vcpkg_custom_triplet_folder = os.path.join(os.getcwd(), "vcpkg_triplets")
-vcpkg_triplet = "{}-{}".format(vcpkg_architecture, vcpkg_platform)
-# Disabled optional dependencies:
-# - freeimage fails on wasm32: libwebp: ISO C99 and later do not support implicit function declarations.
-# - vtk is a large dependency (didn't even try to build it).
-# - tbb is just for alternative threading.
-subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet], check=True,
-        env={k: v for k, v in os.environ.items() if k not in c_vars}) # Avoid interfering with vcpkg
+if env.get("skip_vcpkg_install", False): # TODO: Skip this work for --help or other non-build commands.
+    vcpkg_dir = os.path.join(os.getcwd(), "vcpkg")
+    vcpkg_platform = { "macos": "osx", "web": "emscripten" }.get(env.get("platform"), env.get("platform"))
+    vcpkg_architecture = { "x86_64": "x64", "x86_32": "x86", "arm32": "arm" }.get(env.get("arch"), env.get("arch"))
+    if vcpkg_platform == "android" and vcpkg_architecture == "arm": vcpkg_architecture = "arm-neon" # More up to date NDK
+    vcpkg_custom_triplet_folder = os.path.join(os.getcwd(), "vcpkg_triplets")
+    vcpkg_triplet = "{}-{}".format(vcpkg_architecture, vcpkg_platform)
+    # Disabled optional dependencies:
+    # - freeimage fails on wasm32: libwebp: ISO C99 and later do not support implicit function declarations.
+    # - vtk is a large dependency (didn't even try to build it).
+    # - tbb is just for alternative threading.
+    subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet], check=True,
+            env={k: v for k, v in os.environ.items() if k not in c_vars}) # Avoid interfering with vcpkg
 
-# Find all the static libraries built by vcpkg to link against.
-vcpkg_lib_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "lib")
-vcpkg_include_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "include")
-vcpkg_libs = [os.path.basename(l) for l in os.listdir(vcpkg_lib_dir) if l.endswith((".a", ".lib"))]
-vcpkg_libs = [re.sub(r'^lib', '', re.sub(r'\.(a|.lib)$', '', lib)) for lib in vcpkg_libs]
-env.Append(LIBPATH=vcpkg_lib_dir, LIBS=vcpkg_libs, CPPPATH=vcpkg_include_dir)
-env.Append(CPPPATH=os.path.join(vcpkg_include_dir, "opencascade")) # Add the OpenCASCADE include directory
+    # Find all the static libraries built by vcpkg to link against.
+    vcpkg_lib_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "lib")
+    vcpkg_include_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "include")
+    vcpkg_libs = [os.path.basename(l) for l in os.listdir(vcpkg_lib_dir) if l.endswith((".a", ".lib"))]
+    vcpkg_libs = [re.sub(r'^lib', '', re.sub(r'\.(a|.lib)$', '', lib)) for lib in vcpkg_libs]
+    env.Append(LIBPATH=vcpkg_lib_dir, LIBS=vcpkg_libs, CPPPATH=vcpkg_include_dir)
+    env.Append(CPPPATH=os.path.join(vcpkg_include_dir, "opencascade")) # Add the OpenCASCADE include directory
 
 # Find and generate all sources
 sources = Glob("#src/*.cpp")
