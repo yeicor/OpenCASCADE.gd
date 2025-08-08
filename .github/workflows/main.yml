@@ -62,7 +62,7 @@ jobs:
 
       - if: "${{ matrix.target.platform == 'windows' }}"
         shell: "pwsh"
-        run: "Remove-Item bin/* -Include *.exp,*.lib,*.pdb -Force"
+        run: "Remove-Item demo/addons/OpenCASCADE.gd/* -Include *.exp,*.lib,*.pdb -Force"
 
       - uses: "actions/upload-artifact@v4"
         with:
