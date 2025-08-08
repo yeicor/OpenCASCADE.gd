@@ -12,10 +12,11 @@ subprocess.run(["git", "submodule", "update", "--init", "--recursive"], check=Tr
 
 # Ensure vcpkg is installed
 vcpkg_root = os.path.join(os.getcwd(), "vcpkg")
-vcpkg_exe = os.path.join(vcpkg_root, "vcpkg")
+vcpkg_exe = os.path.join(vcpkg_root, "vcpkg.exe" if sys.platform == "win32" else "vcpkg")
 if not os.path.exists(vcpkg_exe):
-    vcpkg_bootstrap = os.path.join(".", "bootstrap-vcpkg." + ("bat" if sys.platform == "win32" else "sh"))
-    subprocess.run([vcpkg_bootstrap, "--disableMetrics"], check=True, cwd=vcpkg_root)
+    vcpkg_bootstrap = os.path.join(vcpkg_root, "bootstrap-vcpkg.bat" if sys.platform == "win32" else "bootstrap-vcpkg.sh")
+    subprocess.run([vcpkg_bootstrap], shell=True, check=True)
+
 
 # Custom variables
 vars = Variables()
@@ -35,7 +36,11 @@ vcpkg_architectures = { "x86_64": "x64", "x86_32": "x86", "arm32": "arm", "unive
         .get(env.get("arch"), env.get("arch"))
 for vcpkg_architecture in vcpkg_architectures.split(","):
     vcpkg_triplet = "{}-{}".format(vcpkg_architecture, vcpkg_platform)
-    subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson,freeimage]', '--triplet', vcpkg_triplet], check=True)
+    # Disabled optional dependencies:
+    # - freeimage fails on wasm32: libwebp: ISO C99 and later do not support implicit function declarations.
+    # - vtk is a large dependency (didn't even try to build it).
+    # - tbb is just for alternative threading.
+    subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet], check=True)
 
 # Find all the static libraries built by vcpkg to link against.
 vcpkg_lib_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "lib")
@@ -53,7 +58,7 @@ if ',' in vcpkg_architectures: # Hack for universal macs: need to combine multip
     vcpkg_lib_dir = new_vcpkg_lib_dir
 vcpkg_include_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "include")
 vcpkg_libs = [os.path.basename(l) for l in os.listdir(vcpkg_lib_dir) if l.endswith((".a", ".lib"))]
-vcpkg_libs = [re.replace(r'^lib', '', re.replace(r'\.(a|.lib)$', '', lib)) for lib in vcpkg_libs]
+vcpkg_libs = [re.sub(r'^lib', '', re.sub(r'\.(a|.lib)$', '', lib)) for lib in vcpkg_libs]
 env.Append(LIBPATH=vcpkg_lib_dir, LIBS=vcpkg_libs, INCLUDE=vcpkg_include_dir)
 
 # Find and generate all sources

@@ -46,7 +46,7 @@ jobs:
         run: "sudo apt-get update && sudo apt-get install -y libx11-dev libgl1-mesa-dev libfontconfig-dev"
       - if: "${{ matrix.target.os == 'macos-15'}}"
         run: "brew install autoconf automake autoconf-archive"
-      - if: "${{ matrix.target.platform == 'android' && matrix.target.arch == 'arm32' }}"
+      - if: "${{ (matrix.target.platform == 'android' || matrix.target.platform == 'linux') && matrix.target.arch == 'arm32' }}" # armv7a-linux-androideabi
         run: "sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabi g++-arm-linux-gnueabi"
       # </Platform/arch-specific setup>
 
