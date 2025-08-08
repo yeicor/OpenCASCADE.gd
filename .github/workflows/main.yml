@@ -51,6 +51,11 @@ jobs:
           scons-cache: "${{ github.workspace }}/.scons-cache/"
           cache-name: "${{ matrix.target.platform }}_${{ matrix.target.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}"
 
+      - uses: "actions/cache@v4"
+        with:
+          path: "${{ github.workspace }}/vcpkg/installed"
+          key: "vcpkg-${{ matrix.target.platform }}-${{ matrix.target.arch }}"
+
       - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }}"
         env:
           SCONS_CACHE: "${{ github.workspace }}/.scons-cache/"
