@@ -39,11 +39,12 @@ print("AR (Archiver):", env.get('AR', 'Not found'))
 print(env.Dump())
 
 # For every env variable ending in COM, add a corresponding COMSTR one with the same value.
-to_add = {}
-for key, value in env.items():
-    if key.endswith("COM"):
-        to_add[key.replace("COM", "COMSTR")] = '\n' + value
-env.Append(**to_add)
+if sys.platform != "win32":
+    to_add = {}
+    for key, value in env.items():
+        if key.endswith("COM"):
+            to_add[key.replace("COM", "COMSTR")] = '\n' + value
+    env.Append(**to_add)
 
 if not env.get("skip_vcpkg_install"):
     # Build the vcpkg library for the requested platform and architecture.
@@ -57,7 +58,7 @@ if not env.get("skip_vcpkg_install"):
         # - freeimage fails on wasm32: libwebp: ISO C99 and later do not support implicit function declarations.
         # - vtk is a large dependency (didn't even try to build it).
         # - tbb is just for alternative threading.
-        subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet], check=True)
+        subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet, '--disable-metrics'], check=True)
 
     # Find all the static libraries built by vcpkg to link against.
     vcpkg_lib_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "lib")
@@ -66,7 +67,7 @@ if not env.get("skip_vcpkg_install"):
         new_vcpkg_lib_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "lib")
         def lipo_cmd(lib_fname):
             return ['lipo'] + \
-                [os.path.join(vcpkg_dir, "installed", arch, lib_fname) for a in vcpkg_architectures.split(',')] + \
+                [os.path.join(vcpkg_dir, "installed", arch, lib_fname) for arch in vcpkg_architectures.split(',')] + \
                 ['-output', os.path.join(new_vcpkg_lib_dir, lib_fname), '-create']
         for lib_fname in os.listdir(vcpkg_lib_dir):
             if lib_fname.endswith(".a"):
