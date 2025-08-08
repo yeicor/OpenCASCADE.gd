@@ -30,6 +30,14 @@ Help(vars.GenerateHelpText(localEnv))
 env = SConscript("godot-cpp/SConstruct", {'env': localEnv})
 env.SConsignFile("${variant_dir}/.sconsign")
 
+# Print the compilers SCons found
+print("CC (C compiler):", env.get('CC', 'Not found'))
+print("CXX (C++ compiler):", env.get('CXX', 'Not found'))
+print("AS (Assembler):", env.get('AS', 'Not found'))
+print("LINK (Linker):", env.get('LINK', 'Not found'))
+print("AR (Archiver):", env.get('AR', 'Not found'))
+print(env.Dump())
+
 if not env.get("skip_vcpkg_install"):
     # Build the vcpkg library for the requested platform and architecture.
     vcpkg_dir = os.path.join(os.getcwd(), "vcpkg")
@@ -67,14 +75,6 @@ if not env.get("skip_vcpkg_install"):
 sources = Glob("#src/*.cpp")
 if env["target"] in ["editor", "template_debug"]:
     sources.append(env.GodotCPPDocData("#src/gen/doc_data.gen.cpp", source=Glob("#doc_classes/*.xml")))
-
-# Print the compilers SCons found
-print("CC (C compiler):", env.get('CC', 'Not found'))
-print("CXX (C++ compiler):", env.get('CXX', 'Not found'))
-print("AS (Assembler):", env.get('AS', 'Not found'))
-print("LINK (Linker):", env.get('LINK', 'Not found'))
-print("AR (Archiver):", env.get('AR', 'Not found'))
-print(env.Dump())
 
 # Build our shared library.
 install_dir = f"#demo/addons/${libname}" # Build (install) directly into the demo project
