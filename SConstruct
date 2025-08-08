@@ -44,7 +44,7 @@ vcpkg_triplet = "{}-{}".format(vcpkg_architecture, vcpkg_platform)
 # - freeimage fails on wasm32: libwebp: ISO C99 and later do not support implicit function declarations.
 # - vtk is a large dependency (didn't even try to build it).
 # - tbb is just for alternative threading.
-#subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet], check=True)
+subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet], check=True)
 
 # Find all the static libraries built by vcpkg to link against.
 vcpkg_lib_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "lib")
