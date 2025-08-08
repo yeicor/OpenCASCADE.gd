@@ -86,7 +86,7 @@ jobs:
           key: "vcpkg-${{ matrix.target.platform }}-${{ matrix.target.arch }}"
           path: "."
 
-      - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }}"
+      - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no"
         env:
           SCONS_CACHE: "./.scons-cache/"
           VCPKG_DISABLE_METRICS: "1"

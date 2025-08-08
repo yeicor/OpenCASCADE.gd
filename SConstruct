@@ -33,6 +33,12 @@ env.SConsignFile("${variant_dir}/.sconsign")
 # For every env variable ending in COM, add a corresponding COMSTR one with the same value (i.e. print the command).
 if sys.platform != "win32": env.Append(**{k.replace("COM", "COMSTR"): '\n'+v for k, v in env.items() if k.endswith("COM")})
 
+# Follow a little the convention: copy CC, CXX... if they are set in the environment.
+c_vars = ["CC", "CXX", "CPP", "AR", "RANLIB", "STRIP", "CFLAGS", "CXXFLAGS", "CPPFLAGS", "LDFLAGS"]
+for var in c_vars:
+    if var in os.environ:
+        env[var] = os.environ[var]
+
 # Build the vcpkg library for the requested platform and architecture.
 vcpkg_dir = os.path.join(os.getcwd(), "vcpkg")
 vcpkg_platform = { "macos": "osx", "web": "emscripten" }.get(env.get("platform"), env.get("platform"))
@@ -44,7 +50,8 @@ vcpkg_triplet = "{}-{}".format(vcpkg_architecture, vcpkg_platform)
 # - freeimage fails on wasm32: libwebp: ISO C99 and later do not support implicit function declarations.
 # - vtk is a large dependency (didn't even try to build it).
 # - tbb is just for alternative threading.
-subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet], check=True, env={})
+subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet], check=True,
+        env={k: v for k, v in os.environ.items() if k not in c_vars}) # Avoid interfering with vcpkg
 
 # Find all the static libraries built by vcpkg to link against.
 vcpkg_lib_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "lib")
@@ -65,8 +72,3 @@ suffix = env['suffix'].replace(".dev", "").replace(".universal", "")
 lib_filename = "{}{}{}{}".format(env.subst('$SHLIBPREFIX'), libname, suffix, env.subst('$SHLIBSUFFIX'))
 library = env.SharedLibrary(os.path.join(install_dir, lib_filename), source=sources)
 Default(library) # Default to simply building the library.
-
-# Follow a little the convention: copy CC, CXX... if they are set in the environment.
-for var in ["CC", "CXX", "CPP", "AR", "RANLIB", "STRIP", "CFLAGS", "CXXFLAGS", "CPPFLAGS", "LDFLAGS"]:
-    if var in os.environ:
-        env[var] = os.environ[var]
