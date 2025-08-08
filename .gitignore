@@ -1,62 +1,39 @@
-# Godot auto generated files
-*.gen.*
-.godot/
-
 # Ignore library files but not the gdextension file
-demo/bin/*
-!demo/bin/android
-demo/bin/android/*
-!demo/bin/android/.gitkeep
-!demo/bin/linux
-demo/bin/linux/*
-!demo/bin/linux/.gitkeep
-!demo/bin/macos
-demo/bin/macos/*
-!demo/bin/macos/.gitkeep
-!demo/bin/windows
-demo/bin/windows/*
-!demo/bin/windows/.gitkeep
-!demo/bin/*.gdextension
-.sconsign*.dblite
+demo/addons/OpenCASCADE.gd/*
+!demo/addons/OpenCASCADE.gd/OpenCASCADE.gd.gdextension
 
 # Ignore custom.py
-custom.py
+/custom.py
 
 # Ignore generated compile_commands.json
-compile_commands.json
+/compile_commands.json
 
-# Ignore files generated for documentation
+# Ignore generated source files
 /src/gen
 
-# Binaries
-*.o
-*.os
-*.so
-*.obj
-*.bc
-*.pyc
-*.dblite
-*.pdb
-*.lib
-*.config
-*.creator
-*.creator.user
-*.files
-*.includes
-*.idb
-*.exp
+# Build artifacts. TODO: build out of tree (see SConstruct)
+/build/
+/src/**/*.o
+/src/**/*.os
+/src/**/*.so
+/src/**/*.obj
+/src/**/*.bc
+/src/**/*.pyc
+/src/**/*.dblite
+/src/**/*.pdb
+/src/**/*.lib
+/src/**/*.config
+/src/**/*.creator
+/src/**/*.creator.user
+/src/**/*.files
+/src/**/*.includes
+/src/**/*.idb
+/src/**/*.exp
 
-# Other stuff
-*.log
+# IDEs
+/.idea/
+/.vscode/
 
-# VSCode
-.vscode/*
-!.vscode/extensions.json
-.DS_Store
-
-# Jetbrains
-.idea/
-
-# Cmake
-cmake-build*
-CMakeUserPresets.json
+# Godot auto generated files
+/demo/*.gen.*
+/demo/.godot/

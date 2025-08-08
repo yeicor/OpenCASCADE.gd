@@ -66,8 +66,8 @@ jobs:
 
       - uses: "actions/upload-artifact@v4"
         with:
-          name: "OpenCascade.gd-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
-          path: "${{ github.workspace }}/bin/**"
+          name: "OpenCASCADE.gd-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
+          path: "${{ github.workspace }}/demo/addons/OpenCASCADE.gd/**"
 
   merge:
     runs-on: "ubuntu-24.04"
@@ -75,6 +75,6 @@ jobs:
     steps:
       - uses: "actions/upload-artifact/merge@v4"
         with:
-          name: "OpenCascade.gd"
-          pattern: "OpenCascade.gd-*"
+          name: "OpenCASCADE.gd"
+          pattern: "OpenCASCADE.gd-*"
           delete-merged: true

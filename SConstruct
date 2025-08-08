@@ -2,63 +2,30 @@
 import os
 import sys
 
-from methods import print_error
-
+# Ensure submodules are initialized and updated
+os.system("git submodule update --init --recursive")
 
 libname = "OpenCASCADE.gd"
-projectdir = "demo"
 
-localEnv = Environment(tools=["default"], PLATFORM="")
+# Custom variables
+vars = Variables()
+vars.Add('variant_dir', 'WIP: The (possibly out-of-tree) directory to place the variant build in', 'build')
+localEnv = Environment(variables = vars)
+Help(vars.GenerateHelpText(localEnv))
 
-# Build profiles can be used to decrease compile times.
-# You can either specify "disabled_classes", OR
-# explicitly specify "enabled_classes" which disables all other classes.
-# Modify the example file as needed and uncomment the line below or
-# manually specify the build_profile parameter when running SCons.
+# Inherit the environment from the godot-cpp SConstruct file.
+# TODO: Out-of-tree builds (and clean .gitignore). Godot 4.5: https://github.com/godotengine/godot-cpp/pull/1669/files
+env = SConscript("godot-cpp/SConstruct", {'env': localEnv})
+env.SConsignFile("${variant_dir}/.sconsign")
 
-# localEnv["build_profile"] = "build_profile.json"
-
-customs = ["custom.py"]
-customs = [os.path.abspath(path) for path in customs]
-
-opts = Variables(customs, ARGUMENTS)
-opts.Update(localEnv)
-
-Help(opts.GenerateHelpText(localEnv))
-
-env = localEnv.Clone()
-
-if not (os.path.isdir("godot-cpp") and os.listdir("godot-cpp")):
-    print_error("""godot-cpp is not available within this folder, as Git submodules haven't been initialized.
-Run the following command to download godot-cpp:
-
-    git submodule update --init --recursive""")
-    sys.exit(1)
-
-env = SConscript("godot-cpp/SConstruct", {"env": env, "customs": customs})
-
-env.Append(CPPPATH=["src/"])
-sources = Glob("src/*.cpp")
-
+# Find and generate all sources
+sources = Glob("#src/*.cpp")
 if env["target"] in ["editor", "template_debug"]:
-    try:
-        doc_data = env.GodotCPPDocData("src/gen/doc_data.gen.cpp", source=Glob("doc_classes/*.xml"))
-        sources.append(doc_data)
-    except AttributeError:
-        print("Not including class reference as we're targeting a pre-4.3 baseline.")
+    sources.append(env.GodotCPPDocData("#src/gen/doc_data.gen.cpp", source=Glob("#doc_classes/*.xml")))
 
-# .dev doesn't inhibit compatibility, so we don't need to key it.
-# .universal just means "compatible with all relevant arches" so we don't need to key it.
+# Build our shared library.
+install_dir = "#demo/addons/OpenCASCADE.gd" # Build (install) directly into the demo project
 suffix = env['suffix'].replace(".dev", "").replace(".universal", "")
-
 lib_filename = "{}{}{}{}".format(env.subst('$SHLIBPREFIX'), libname, suffix, env.subst('$SHLIBSUFFIX'))
-
-library = env.SharedLibrary(
-    "bin/{}/{}".format(env['platform'], lib_filename),
-    source=sources,
-)
-
-copy = env.Install("{}/bin/{}/".format(projectdir, env["platform"]), library)
-
-default_args = [library, copy]
-Default(*default_args)
+library = env.SharedLibrary(os.path.join(install_dir, lib_filename), source=sources)
+Default(library) # Default to simply building the library.
