@@ -39,7 +39,7 @@ jobs:
         with:
           submodules: "recursive"
 
-      # <Platform/arch-specific setup>
+      # <Triplet-specific setup>
       - if: "matrix.target.platform == 'linux' && matrix.target.arch == 'x86_32'"
         run: "sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib"
       - if: "matrix.target.platform == 'linux' && matrix.target.arch == 'arm32'"
@@ -55,7 +55,7 @@ jobs:
       - if: "matrix.target.platform == 'web'"
         uses: "mymindstorm/setup-emsdk@v14"
         with:
-          version: "3.1.62" # TODO: Auto-update?
+          version: "4.0.11" # More recent than defaults, as allow-multiple-definition is required! # TODO: Auto-update?
           no-cache: "true"
       - if: "matrix.target.platform == 'web'"
         run: "echo 'LDFLAGS=\"-Wl,-allow-multiple-definition\"' >> $GITHUB_ENV"
@@ -67,7 +67,7 @@ jobs:
           link-to-sdk: true
       - if: "matrix.target.platform == 'android'"
         run: 'echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV'
-      # </Platform/arch-specific setup>
+      # </Triplet-specific setup>
 
       - uses: "actions/setup-python@v5"
         with:
