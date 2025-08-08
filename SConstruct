@@ -40,7 +40,7 @@ for var in c_vars:
         env[var] = os.environ[var]
 
 # Build the vcpkg library for the requested platform and architecture.
-if env.get("skip_vcpkg_install", False): # TODO: Skip this work for --help or other non-build commands.
+if not env.get("skip_vcpkg_install"): # TODO: Skip this work for --help or other non-build commands.
     vcpkg_dir = os.path.join(os.getcwd(), "vcpkg")
     vcpkg_platform = { "macos": "osx", "web": "emscripten" }.get(env.get("platform"), env.get("platform"))
     vcpkg_architecture = { "x86_64": "x64", "x86_32": "x86", "arm32": "arm" }.get(env.get("arch"), env.get("arch"))
