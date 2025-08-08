@@ -51,6 +51,7 @@ jobs:
         uses: "egor-tensin/setup-mingw@v2"
         with:
           version: "13.2.0"
+          static: '0' # This workaround is broken on new versions (needed?)
       - if: "matrix.target.os == 'macos-15'"
         run: "brew install autoconf automake autoconf-archive"
       - if: "matrix.target.platform == 'web'"
