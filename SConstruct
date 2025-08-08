@@ -11,8 +11,11 @@ libname = "OpenCASCADE.gd"
 subprocess.run(["git", "submodule", "update", "--init", "--recursive"], check=True)
 
 # Ensure vcpkg is installed
-if not os.path.exists("vcpkg/vcpkg"):
-    subprocess.run(["./vcpkg/bootstrap-vcpkg.sh", "--disableMetrics"], check=True)
+vcpkg_root = os.path.join(os.getcwd(), "vcpkg")
+vcpkg_exe = os.path.join(vcpkg_root, "vcpkg")
+if not os.path.exists(vcpkg_exe):
+    vcpkg_bootstrap = os.path.join(vcpkg_root, "bootstrap-vcpkg.sh")
+    subprocess.run([vcpkg_bootstrap, "--disableMetrics"], check=True)
 
 # Custom variables
 vars = Variables()
@@ -28,11 +31,11 @@ env.SConsignFile("${variant_dir}/.sconsign")
 # Build the vcpkg library for the requested platform and architecture.
 vcpkg_dir = os.path.join(os.getcwd(), "vcpkg")
 vcpkg_platform = { "macos": "osx", "web": "emscripten" }.get(env.get("platform"), env.get("platform"))
-vcpkg_architectures = { "x86_64": "x64", "x86_32": "x86", "arm32": "arm", "universal": "x64-osx,arm64-osx" } \
+vcpkg_architectures = { "x86_64": "x64", "x86_32": "x86", "arm32": "arm", "universal": "x64,arm64" } \
         .get(env.get("arch"), env.get("arch"))
 for vcpkg_architecture in vcpkg_architectures.split(","):
     vcpkg_triplet = "{}-{}".format(vcpkg_architecture, vcpkg_platform)
-    subprocess.run(['./vcpkg', 'install', 'opencascade[freetype,rapidjson,freeimage]', '--triplet', vcpkg_triplet], check=True, cwd=vcpkg_dir)
+    subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson,freeimage]', '--triplet', vcpkg_triplet], check=True)
 
 # Find all the static libraries built by vcpkg to link against.
 vcpkg_lib_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "lib")
