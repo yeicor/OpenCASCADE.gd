@@ -36,7 +36,6 @@ print("CXX (C++ compiler):", env.get('CXX', 'Not found'))
 print("AS (Assembler):", env.get('AS', 'Not found'))
 print("LINK (Linker):", env.get('LINK', 'Not found'))
 print("AR (Archiver):", env.get('AR', 'Not found'))
-print(env.Dump())
 
 # For every env variable ending in COM, add a corresponding COMSTR one with the same value.
 if sys.platform != "win32":
@@ -52,6 +51,7 @@ if not env.get("skip_vcpkg_install"):
     vcpkg_platform = { "macos": "osx", "web": "emscripten" }.get(env.get("platform"), env.get("platform"))
     vcpkg_architectures = { "x86_64": "x64", "x86_32": "x86", "arm32": "arm", "universal": "x64,arm64" } \
             .get(env.get("arch"), env.get("arch"))
+    vcpkg_custom_triplet_folder = os.path.join(os.getcwd(), "vcpkg_triplets")
     for vcpkg_architecture in vcpkg_architectures.split(","):
         vcpkg_triplet = "{}-{}".format(vcpkg_architecture, vcpkg_platform)
         # Disabled optional dependencies:
@@ -67,7 +67,8 @@ if not env.get("skip_vcpkg_install"):
         new_vcpkg_lib_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "lib")
         def lipo_cmd(lib_fname):
             return ['lipo'] + \
-                [os.path.join(vcpkg_dir, "installed", arch, lib_fname) for arch in vcpkg_architectures.split(',')] + \
+                [os.path.join(vcpkg_dir, "installed", arch + "-" + vcpkg_platform, lib_fname)
+                for arch in vcpkg_architectures.split(',')] + \
                 ['-output', os.path.join(new_vcpkg_lib_dir, lib_fname), '-create']
         for lib_fname in os.listdir(vcpkg_lib_dir):
             if lib_fname.endswith(".a"):

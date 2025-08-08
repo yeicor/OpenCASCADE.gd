@@ -42,10 +42,14 @@ jobs:
       # <Platform/arch-specific setup> (more in setup-godot-cpp)
       - if: "${{ matrix.target.platform == 'linux' && matrix.target.arch == 'x86_32' }}"
         run: "sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib"
+      - if: "${{ matrix.target.platform == 'linux' && matrix.target.arch == 'arm' }}"
+        run: "sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf"
       - if: "${{ matrix.target.os == 'ubuntu-24.04' || matrix.target.os == 'ubuntu-24.04-arm' }}"
         run: "sudo apt-get update && sudo apt-get install -y libx11-dev libgl1-mesa-dev libfontconfig-dev"
       - if: "${{ matrix.target.os == 'macos-15'}}"
         run: "brew install autoconf automake autoconf-archive"
+      - if: "${{ matrix.target.platform == 'web' }}"
+        run: "echo 'LDFLAGS=\"-Wl,-allow-multiple-definition\"' >> $GITHUB_ENV"
       # </Platform/arch-specific setup>
 
       - uses: "./godot-cpp/.github/actions/setup-godot-cpp"
@@ -62,6 +66,8 @@ jobs:
         with:
           key: "vcpkg-${{ matrix.target.platform }}-${{ matrix.target.arch }}"
           path: "./vcpkg/"
+
+      - run: "env" # Should include ANDROID_NDK_HOME for Android builds!
 
       - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }}"
         env:
