@@ -37,13 +37,8 @@ print("AS (Assembler):", env.get('AS', 'Not found'))
 print("LINK (Linker):", env.get('LINK', 'Not found'))
 print("AR (Archiver):", env.get('AR', 'Not found'))
 
-# For every env variable ending in COM, add a corresponding COMSTR one with the same value.
-if sys.platform != "win32":
-    to_add = {}
-    for key, value in env.items():
-        if key.endswith("COM"):
-            to_add[key.replace("COM", "COMSTR")] = '\n' + value
-    env.Append(**to_add)
+# For every env variable ending in COM, add a corresponding COMSTR one with the same value (i.e. print the command).
+if sys.platform != "win32": env.Append(**{k.replace("COM", "COMSTR"): '\n'+v for k, v in env.items() if k.endswith("COM")})
 
 if not env.get("skip_vcpkg_install"):
     # Build the vcpkg library for the requested platform and architecture.
@@ -86,7 +81,7 @@ if env["target"] in ["editor", "template_debug"]:
     sources.append(env.GodotCPPDocData("#src/gen/doc_data.gen.cpp", source=Glob("#doc_classes/*.xml")))
 
 # Build our shared library.
-install_dir = f"#demo/addons/${libname}" # Build (install) directly into the demo project
+install_dir = f"#demo/addons/{libname}" # Build (install) directly into the demo project
 suffix = env['suffix'].replace(".dev", "").replace(".universal", "")
 lib_filename = "{}{}{}{}".format(env.subst('$SHLIBPREFIX'), libname, suffix, env.subst('$SHLIBSUFFIX'))
 library = env.SharedLibrary(os.path.join(install_dir, lib_filename), source=sources)
