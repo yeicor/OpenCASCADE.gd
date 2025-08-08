@@ -44,14 +44,15 @@ vcpkg_triplet = "{}-{}".format(vcpkg_architecture, vcpkg_platform)
 # - freeimage fails on wasm32: libwebp: ISO C99 and later do not support implicit function declarations.
 # - vtk is a large dependency (didn't even try to build it).
 # - tbb is just for alternative threading.
-subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet, '--disable-metrics'], check=True)
+#subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet], check=True)
 
 # Find all the static libraries built by vcpkg to link against.
 vcpkg_lib_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "lib")
 vcpkg_include_dir = os.path.join(vcpkg_dir, "installed", vcpkg_triplet, "include")
 vcpkg_libs = [os.path.basename(l) for l in os.listdir(vcpkg_lib_dir) if l.endswith((".a", ".lib"))]
 vcpkg_libs = [re.sub(r'^lib', '', re.sub(r'\.(a|.lib)$', '', lib)) for lib in vcpkg_libs]
-env.Append(LIBPATH=vcpkg_lib_dir, LIBS=vcpkg_libs, INCLUDE=vcpkg_include_dir)
+env.Append(LIBPATH=vcpkg_lib_dir, LIBS=vcpkg_libs, CPPPATH=vcpkg_include_dir)
+env.Append(CPPPATH=os.path.join(vcpkg_include_dir, "opencascade")) # Add the OpenCASCADE include directory
 
 # Find and generate all sources
 sources = Glob("#src/*.cpp")
@@ -64,3 +65,8 @@ suffix = env['suffix'].replace(".dev", "").replace(".universal", "")
 lib_filename = "{}{}{}{}".format(env.subst('$SHLIBPREFIX'), libname, suffix, env.subst('$SHLIBSUFFIX'))
 library = env.SharedLibrary(os.path.join(install_dir, lib_filename), source=sources)
 Default(library) # Default to simply building the library.
+
+# Follow a little the convention: copy CC, CXX... if they are set in the environment.
+for var in ["CC", "CXX", "CPP", "AR", "RANLIB", "STRIP", "CFLAGS", "CXXFLAGS", "CPPFLAGS", "LDFLAGS"]:
+    if var in os.environ:
+        env[var] = os.environ[var]

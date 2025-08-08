@@ -44,21 +44,19 @@ jobs:
       - if: "matrix.target.platform == 'linux' && matrix.target.arch == 'x86_32'"
         run: "sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib"
       - if: "matrix.target.platform == 'linux' && matrix.target.arch == 'arm32'"
-        run: "sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf"
+        run: "sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf && echo CC='arm-linux-gnueabihf-gcc' >> $GITHUB_ENV && echo CXX='arm-linux-gnueabihf-g++' >> $GITHUB_ENV"
       - if: "matrix.target.os == 'ubuntu-24.04' || matrix.target.os == 'ubuntu-24.04-arm'"
         run: "sudo apt-get update && sudo apt-get install -y libx11-dev libgl1-mesa-dev libfontconfig-dev"
       - if: "matrix.target.platform == 'windows'"
         uses: "egor-tensin/setup-mingw@v2"
         with:
-          version: "13.2.0"
-          static: '0' # This workaround is broken on new versions (needed?)
+          version: "12.2.0" # It seems like updates are broken (follow godot-cpp)
       - if: "matrix.target.os == 'macos-15'"
         run: "brew install autoconf automake autoconf-archive"
       - if: "matrix.target.platform == 'web'"
         uses: "mymindstorm/setup-emsdk@v14"
         with:
-          version: "4.0.12"
-          no-cache: "true"
+          version: "4.0.12" # More recent than Godot's default, since we need allow-multiple-definition support
       - if: "matrix.target.platform == 'web'"
         run: "echo 'LDFLAGS=\"-Wl,-allow-multiple-definition\"' >> $GITHUB_ENV"
       - if: "matrix.target.platform == 'android'"
@@ -91,6 +89,7 @@ jobs:
       - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }}"
         env:
           SCONS_CACHE: "./.scons-cache/"
+          VCPKG_DISABLE_METRICS: "1"
 
       - uses: "./godot-cpp/.github/actions/godot-cache-save"
         with:
