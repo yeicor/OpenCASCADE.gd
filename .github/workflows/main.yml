@@ -22,7 +22,8 @@ jobs:
             { platform: "windows", arch: "x86_64", os: "windows-2025" },
             { platform: "windows", arch: "x86_32", os: "windows-2025" },
             { platform: "windows", arch: "arm64", os: "windows-2025" },
-            { platform: "macos", arch: "universal", os: "macos-15" }, # x86_64 and arm64
+            { platform: "macos", arch: "arm64", os: "macos-15" },
+            { platform: "macos", arch: "x86_64", os: "macos-15" },
             { platform: "web", arch: "wasm32", os: "ubuntu-24.04" },
             { platform: "android", arch: "x86_64", os: "ubuntu-24.04" },
             { platform: "android", arch: "x86_32", os: "ubuntu-24.04" },
@@ -49,13 +50,13 @@ jobs:
       - if: "matrix.target.platform == 'windows'"
         uses: "egor-tensin/setup-mingw@v2"
         with:
-          version: "12.2.0" # TODO: Auto-update?
+          version: "13.0.0" # TODO: Auto-update?
       - if: "matrix.target.os == 'macos-15'"
         run: "brew install autoconf automake autoconf-archive"
       - if: "matrix.target.platform == 'web'"
         uses: "mymindstorm/setup-emsdk@v14"
         with:
-          version: "4.0.11" # More recent than defaults, as allow-multiple-definition is required! # TODO: Auto-update?
+          version: "4.0.12" # TODO: Auto-update?
           no-cache: "true"
       - if: "matrix.target.platform == 'web'"
         run: "echo 'LDFLAGS=\"-Wl,-allow-multiple-definition\"' >> $GITHUB_ENV"
@@ -63,7 +64,7 @@ jobs:
         uses: "nttld/setup-ndk@v1"
         id: "setup-ndk"
         with:
-          ndk-version: "r23c" # TODO: Auto-update?
+          ndk-version: "r28c" # TODO: Auto-update?
           link-to-sdk: true
       - if: "matrix.target.platform == 'android'"
         run: 'echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV'
@@ -75,18 +76,16 @@ jobs:
       - shell: "bash"
         run: "python -m pip install scons==4.9.1" # TODO: Auto-update?
 
-      - uses: "./godot-cpp/.github/actions/godot-cache-restore"
+      - uses: "actions/cache/restore@v4"
+        id: "scons-cache"
         with:
-          scons-cache: "./.scons-cache/"
-          cache-name: "${{ matrix.target.platform }}_${{ matrix.target.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}"
-
+          key: "scons-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
+          path: "."
       - uses: "actions/cache/restore@v4"
         id: "vcpkg-cache"
         with:
           key: "vcpkg-${{ matrix.target.platform }}-${{ matrix.target.arch }}"
-          path: "./vcpkg/"
-
-      - run: "env" # Should include ANDROID_NDK_HOME for Android builds!
+          path: "."
 
       - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }}"
         env:
@@ -100,11 +99,13 @@ jobs:
       - uses: "actions/cache/save@v4"
         if: "always()"
         with:
+          key: "${{ steps.scons-cache.outputs.cache-primary-key }}"
+          path: "build\n**/*.o\n**/*.a\n**/*.os**/*.so\n**/*.dylib\n**/*.dll\n**/*.pdb\n**/*.exp\n**/*.lib" # Hopefully simplified to just "build" when out of tree build is implemented.
+      - uses: "actions/cache/save@v4"
+        if: "always()"
+        with:
           key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
-          path: |
-            ./vcpkg/vcpkg*
-            ./vcpkg/buildtrees
-            ./vcpkg/installed
+          path: "./vcpkg/installed"
 
       - if: "${{ matrix.target.platform == 'windows' }}"
         shell: "pwsh"
