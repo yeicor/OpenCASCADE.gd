@@ -54,22 +54,32 @@ jobs:
 
       - uses: "./godot-cpp/.github/actions/godot-cache-restore"
         with:
-          scons-cache: "${{ github.workspace }}/.scons-cache/"
+          scons-cache: "./.scons-cache/"
           cache-name: "${{ matrix.target.platform }}_${{ matrix.target.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}"
 
-      - uses: "actions/cache@v4"
+      - uses: "actions/cache/restore@v4"
+        id: "vcpkg-cache"
         with:
-          path: "${{ github.workspace }}/vcpkg/installed"
           key: "vcpkg-${{ matrix.target.platform }}-${{ matrix.target.arch }}"
+          path: "./vcpkg/"
 
       - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }}"
         env:
-          SCONS_CACHE: "${{ github.workspace }}/.scons-cache/"
+          SCONS_CACHE: "./.scons-cache/"
 
       - uses: "./godot-cpp/.github/actions/godot-cache-save"
         with:
-          scons-cache: "${{ github.workspace }}/.scons-cache/"
+          scons-cache: "./.scons-cache/"
           cache-name: "${{ matrix.target.platform }}_${{ matrix.target.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}"
+
+      - uses: "actions/cache/save@v4"
+        if: "always()"
+        with:
+          key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
+          path: |
+            ./vcpkg/vcpkg*
+            ./vcpkg/buildtrees
+            ./vcpkg/installed
 
       - if: "${{ matrix.target.platform == 'windows' }}"
         shell: "pwsh"
@@ -78,7 +88,7 @@ jobs:
       - uses: "actions/upload-artifact@v4"
         with:
           name: "OpenCASCADE.gd-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
-          path: "${{ github.workspace }}/demo/addons/OpenCASCADE.gd/**"
+          path: "./demo/addons/OpenCASCADE.gd/**"
 
   merge:
     runs-on: "ubuntu-24.04"
