@@ -31,7 +31,7 @@ env = SConscript("godot-cpp/SConstruct", {'env': localEnv})
 env.SConsignFile("${variant_dir}/.sconsign")
 
 # For every env variable ending in COM, add a corresponding COMSTR one with the same value (i.e. print the command).
-env.Append(**{k.replace("COM", "COMSTR"): '\n'+v.replace(k, "_" + k) for k, v in env.items() if k.endswith("COM")})
+env.Append(**{k.replace("COM", "COMSTR"): '\n'+str(v).replace(k, "_" + k) for k, v in env.items() if k.endswith("COM")})
 
 # Follow a little the convention: copy CC, CXX... if they are set in the environment.
 c_vars = ["CC", "CXX", "CPP", "AR", "RANLIB", "STRIP", "CFLAGS", "CXXFLAGS", "CPPFLAGS", "LDFLAGS"]
