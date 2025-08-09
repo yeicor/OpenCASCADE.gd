@@ -10,12 +10,6 @@ on:
 
 jobs:
   build:
-    env: # https://learn.microsoft.com/en-us/vcpkg/consume/binary-caching-github-packages?pivots=windows-runner
-      USERNAME: "${{ github.repository_owner }}"
-      FEED_URL: "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
-      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json,readwrite"
-    permissions:
-      packages: "write"
     strategy:
       fail-fast: false
       matrix:
@@ -80,30 +74,22 @@ jobs:
           python-version: "3.x"
       - shell: "bash"
         run: "python -m pip install scons==4.9.1"
-      - shell: "bash"
-        run: |
-          ./vcpkg/bootstrap-vcpkg$( command -v pwsh && echo ".bat" || echo ".sh" ) -disableMetrics
-          command -v mono || ( command -v apt-get && sudo apt-get install -y mono-complete ) || ( command -v brew && brew install mono ) || ( command -v choco && choco install mono )
-          mono `./vcpkg/vcpkg fetch nuget | tail -n 1` \
-            sources add \
-            -Source "${{ env.FEED_URL }}" \
-            -StorePasswordInClearText \
-            -Name GitHubPackages \
-            -UserName "${{ env.USERNAME }}" \
-            -Password "${{ secrets.GITHUB_TOKEN }}"
-          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
-            setapikey "${{ secrets.GITHUB_TOKEN }}" \
-            -Source "${{ env.FEED_URL }}"
 
       - uses: "actions/cache/restore@v4"
         id: "scons-cache"
         with:
           key: "scons-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
           path: "./.scons-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
+      - uses: "actions/cache/restore@v4"
+        id: "vcpkg-cache"
+        with:
+          key: "vcpkg-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
+          path: "./.vcpkg-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
 
       - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no ${scons_extra_args}"
         env:
           SCONS_CACHE: "./.scons-cache"
+          VCPKG_DEFAULT_BINARY_CACHE: "./.vcpkg-cache"
           VCPKG_DISABLE_METRICS: "1"
 
       - uses: "actions/cache/save@v4"
@@ -111,6 +97,11 @@ jobs:
         with:
           key: "${{ steps.scons-cache.outputs.cache-primary-key }}"
           path: "./.scons-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
+      - uses: "actions/cache/save@v4"
+        if: "always()"
+        with:
+          key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
+          path: "./.vcpkg-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
 
       - if: "${{ matrix.target.platform == 'windows' }}"
         shell: "pwsh"
@@ -125,7 +116,6 @@ jobs:
         with: # Build artifacts useful for debugging in a local environment
           name: "build-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
           path: "./.scons-cache/\n./vcpkg/"
-
   merge:
     runs-on: "ubuntu-24.04"
     needs: "build"
