@@ -42,7 +42,7 @@ for var in c_vars:
 # Build the vcpkg library for the requested platform and architecture.
 if not env.get("skip_vcpkg_install"): # TODO: Skip this work for --help or other non-build commands.
     vcpkg_dir = os.path.join(os.getcwd(), "vcpkg")
-    vcpkg_platform = { "macos": "osx", "web": "emscripten-pic" }.get(env.get("platform"), env.get("platform"))
+    vcpkg_platform = {  "windows": "mingw-static", "macos": "osx", "web": "emscripten-pic" }.get(env.get("platform"), env.get("platform"))
     vcpkg_architecture = { "x86_64": "x64", "x86_32": "x86", "arm32": "arm" }.get(env.get("arch"), env.get("arch"))
     if vcpkg_platform == "android" and vcpkg_architecture == "arm": vcpkg_architecture = "arm-neon" # More up to date NDK
     vcpkg_custom_triplet_folder = os.path.join(os.getcwd(), "vcpkg_triplets")
