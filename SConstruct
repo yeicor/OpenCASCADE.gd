@@ -62,6 +62,7 @@ if not env.get("skip_vcpkg_install"): # TODO: Skip this work for --help or other
     vcpkg_libs = [re.sub(r'^lib', '', re.sub(r'\.(a|.lib)$', '', lib)) for lib in vcpkg_libs]
     env.Append(LIBPATH=vcpkg_lib_dir, LIBS=vcpkg_libs, CPPPATH=vcpkg_include_dir)
     env.Append(CPPPATH=os.path.join(vcpkg_include_dir, "opencascade")) # Add the OpenCASCADE include directory
+    env.Append(LINKFLAGS='-Wl,-allow-multiple-definition')
 
 # Find and generate all sources
 sources = Glob("#src/*.cpp")
