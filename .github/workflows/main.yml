@@ -58,7 +58,7 @@ jobs:
         with:
           version: "4.0.12" # More recent than Godot's default, since we need allow-multiple-definition support
       - if: "matrix.target.platform == 'web'"
-        run: "echo 'LDFLAGS=-Wl,-allow-multiple-definition' >> $GITHUB_ENV && echo 'scons_extra_args=threads=no' >> $GITHUB_ENV"
+        run: "echo 'scons_extra_args=threads=no' >> $GITHUB_ENV"
       - if: "matrix.target.platform == 'android'"
         uses: "nttld/setup-ndk@v1"
         id: "setup-ndk"
@@ -89,7 +89,7 @@ jobs:
         run: |
           ( [ -d .vcpkg-cache ] || mkdir .vcpkg-cache )
           if command -v wslpath &>/dev/null; then
-            echo "VCPKG_DEFAULT_BINARY_CACHE=$(wslpath -w $(realpath .vcpkg-cache))" >> $GITHUB_ENV;
+            echo "VCPKG_DEFAULT_BINARY_CACHE=$(wslpath -w $(realpath .vcpkg-cache) | sed 's/\\c\\/C:\\/')"
           else
             echo "VCPKG_DEFAULT_BINARY_CACHE=$(realpath .vcpkg-cache)" >> $GITHUB_ENV;
           fi

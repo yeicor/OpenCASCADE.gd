@@ -23,5 +23,8 @@ set(VCPKG_LIBRARY_LINKAGE static)
 set(VCPKG_CMAKE_SYSTEM_NAME Emscripten)
 set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${EMSCRIPTEN_ROOT}/cmake/Modules/Platform/Emscripten.cmake")
 
-# CUSTOM: Force POSITION_INDEPENDENT_CODE to ON (hopefully all dependencies use cmake...)
-set(VCPKG_CMAKE_CONFIGURE_OPTIONS -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+# CUSTOM:  (hopefully all dependencies use cmake...)
+set(VCPKG_CMAKE_CONFIGURE_OPTIONS ${VCPKG_CMAKE_CONFIGURE_OPTIONS}
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON  # Force POSITION_INDEPENDENT_CODE to ON
+    -DCMAKE_SHARED_LINKER_FLAGS=-allow-multiple-definition  # Allow multiple definitions in the shared linker flags
+)
