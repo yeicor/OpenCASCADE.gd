@@ -89,7 +89,7 @@ jobs:
         run: |
           ( [ -d .vcpkg-cache ] || mkdir .vcpkg-cache )
           if [ "${{ matrix.target.platform }}" == "windows" ]; then
-            echo "VCPKG_DEFAULT_BINARY_CACHE=$(realpath .vcpkg-cache | sed -E 's#^/([a-z])/#\U\1:\\#I; s#/#\\#g')"
+            echo "VCPKG_DEFAULT_BINARY_CACHE=$(realpath .vcpkg-cache | sed -E 's#^/([a-z])/#\U\1:\\#I; s#/#\\#g')" >> $GITHUB_ENV;
           else
             echo "VCPKG_DEFAULT_BINARY_CACHE=$(realpath .vcpkg-cache)" >> $GITHUB_ENV;
           fi
