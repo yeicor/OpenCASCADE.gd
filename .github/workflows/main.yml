@@ -88,7 +88,6 @@ jobs:
       - shell: "bash"
         run: |
           ( [ -d .vcpkg-cache ] || mkdir .vcpkg-cache )
-          mkdir -p .vcpkg-cache
           if command -v wslpath &>/dev/null; then
             echo "VCPKG_DEFAULT_BINARY_CACHE=$(wslpath -w $(realpath .vcpkg-cache))" >> $GITHUB_ENV;
           else
