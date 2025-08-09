@@ -10,6 +10,8 @@ on:
 
 jobs:
   build:
+    permissions:
+      packages: "write"
     strategy:
       fail-fast: false
       matrix:
@@ -75,33 +77,39 @@ jobs:
       - shell: "bash"
         run: "python -m pip install scons==4.9.1"
 
+      - uses: "lukka/get-cmake@latest"
+      - uses: "lukka/run-vcpkg@v11"
+        with:
+          binaryCachePath: "${{ github.workspace }}/.vcpkg-cache"
+
       - uses: "actions/cache/restore@v4"
         id: "scons-cache"
         with:
           key: "scons-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
-          path: "."
+          path: "./.scons-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
       - uses: "actions/cache/restore@v4"
         id: "vcpkg-cache"
         with:
           key: "vcpkg-${{ matrix.target.platform }}-${{ matrix.target.arch }}"
-          path: "."
+          path: "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
 
-      - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no  ${scons_extra_args}"
+      - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no ${scons_extra_args}"
         env:
-          SCONS_CACHE: "./.scons-cache/"
+          SCONS_CACHE: "./.scons-cache"
           VCPKG_DISABLE_METRICS: "1"
 
       - uses: "actions/cache/save@v4"
         if: "always()"
         with:
           key: "${{ steps.scons-cache.outputs.cache-primary-key }}"
-          path: "./.scons-cache/" # When out of tree build is implemented, "build" can also be cached for even faster builds
+          path: "./.scons-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
+
       - uses: "actions/cache/save@v4"
         if: "always()"
         with:
           key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
-          path: "./vcpkg/installed"
-
+          path: "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
+          
       - if: "${{ matrix.target.platform == 'windows' }}"
         shell: "pwsh"
         run: "Remove-Item demo/addons/OpenCASCADE.gd/* -Include *.exp,*.lib,*.pdb -Force"
@@ -110,6 +118,11 @@ jobs:
         with:
           name: "OpenCASCADE.gd-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
           path: "./demo/addons/OpenCASCADE.gd/**"
+
+      - uses: "actions/upload-artifact@v4"
+        with: # Build artifacts useful for debugging in a local environment
+          name: "build-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
+          path: "./.scons-cache/\n./vcpkg/"
 
   merge:
     runs-on: "ubuntu-24.04"
