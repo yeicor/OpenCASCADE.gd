@@ -83,7 +83,7 @@ jobs:
         run: "python -m pip install scons==4.9.1"
       - shell: "bash"
         run: |
-          command -v mono || ( [ command -v apt-get ] && sudo apt-get install -y mono-complete ) || ( command -v brew && brew install mono ) || ( command -v choco && choco install mono )
+          command -v mono || ( command -v apt-get && sudo apt-get install -y mono-complete ) || ( command -v brew && brew install mono ) || ( command -v choco && choco install mono )
           mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
             sources add \
             -Source "${{ env.FEED_URL }}" \
