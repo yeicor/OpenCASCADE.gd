@@ -42,7 +42,7 @@ for var in c_vars:
 # Build the vcpkg library for the requested platform and architecture.
 if not env.get("skip_vcpkg_install"): # TODO: Skip this work for --help or other non-build commands.
     vcpkg_dir = os.path.join(os.getcwd(), "vcpkg")
-    vcpkg_platform = { "macos": "osx", "web": "emscripten" }.get(env.get("platform"), env.get("platform"))
+    vcpkg_platform = { "macos": "osx", "web": "emscripten-pic" }.get(env.get("platform"), env.get("platform"))
     vcpkg_architecture = { "x86_64": "x64", "x86_32": "x86", "arm32": "arm" }.get(env.get("arch"), env.get("arch"))
     if vcpkg_platform == "android" and vcpkg_architecture == "arm": vcpkg_architecture = "arm-neon" # More up to date NDK
     vcpkg_custom_triplet_folder = os.path.join(os.getcwd(), "vcpkg_triplets")
@@ -51,7 +51,8 @@ if not env.get("skip_vcpkg_install"): # TODO: Skip this work for --help or other
     # - freeimage fails on wasm32: libwebp: ISO C99 and later do not support implicit function declarations.
     # - vtk is a large dependency (didn't even try to build it).
     # - tbb is just for alternative threading.
-    subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet], check=True,
+    subprocess.run([vcpkg_exe, 'install', 'opencascade[freetype,rapidjson]', '--triplet', vcpkg_triplet,
+            '--overlay-triplets', 'vcpkg_triplets'], check=True,
             env={k: v for k, v in os.environ.items() if k not in c_vars}) # Avoid interfering with vcpkg
 
     # Find all the static libraries built by vcpkg to link against.
