@@ -94,9 +94,6 @@ jobs:
           else
             echo "VCPKG_DEFAULT_BINARY_CACHE=$(realpath .vcpkg-cache)" >> $GITHUB_ENV;
           fi
-  
-
-  && echo \"VCPKG_DEFAULT_BINARY_CACHE=$(realpath .vcpkg-cache)\" >> $GITHUB_ENV"
 
       - run: "echo \"scons_extra_args: ${scons_extra_args}\" && scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no ${scons_extra_args}"
         env:
