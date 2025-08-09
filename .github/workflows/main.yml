@@ -85,7 +85,7 @@ jobs:
         with:
           key: "vcpkg-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
           path: ".vcpkg-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
-      - run: "mkdir -p .vcpkg-cache && echo \"VCPKG_DEFAULT_BINARY_CACHE=$(pwd)/.vcpkg-cache\" >> $GITHUB_ENV"
+      - run: "( [ -d .vcpkg-cache ] || mkdir .vcpkg-cache ) && echo \"VCPKG_DEFAULT_BINARY_CACHE=$(realpath .vcpkg-cache)\" >> $GITHUB_ENV"
 
       - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no ${scons_extra_args}"
         env:
