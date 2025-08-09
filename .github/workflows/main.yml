@@ -78,9 +78,10 @@ jobs:
         run: "python -m pip install scons==4.9.1"
 
       - uses: "lukka/get-cmake@latest"
+      - run: "mkdir .vcpkg-cache"
       - uses: "lukka/run-vcpkg@v11"
         with:
-          binaryCachePath: "${{ github.workspace }}/.vcpkg-cache"
+          binaryCachePath: ".vcpkg-cache"
 
       - uses: "actions/cache/restore@v4"
         id: "scons-cache"
@@ -109,7 +110,7 @@ jobs:
         with:
           key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
           path: "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}"
-          
+
       - if: "${{ matrix.target.platform == 'windows' }}"
         shell: "pwsh"
         run: "Remove-Item demo/addons/OpenCASCADE.gd/* -Include *.exp,*.lib,*.pdb -Force"
