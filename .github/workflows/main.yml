@@ -84,24 +84,25 @@ jobs:
         id: "vcpkg-cache"
         with:
           key: "vcpkg-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
-          path: "./.vcpkg-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
+          path: ".vcpkg-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
+      - run: "mkdir -p .vcpkg-cache"
 
       - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no ${scons_extra_args}"
         env:
-          SCONS_CACHE: "./.scons-cache"
-          VCPKG_DEFAULT_BINARY_CACHE: "./.vcpkg-cache"
+          SCONS_CACHE: ".scons-cache"
+          VCPKG_DEFAULT_BINARY_CACHE: ".vcpkg-cache"
           VCPKG_DISABLE_METRICS: "1"
 
       - uses: "actions/cache/save@v4"
         if: "always()"
         with:
           key: "${{ steps.scons-cache.outputs.cache-primary-key }}"
-          path: "./.scons-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
+          path: ".scons-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
       - uses: "actions/cache/save@v4"
         if: "always()"
         with:
           key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
-          path: "./.vcpkg-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
+          path: ".vcpkg-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
 
       - if: "${{ matrix.target.platform == 'windows' }}"
         shell: "pwsh"
@@ -110,12 +111,12 @@ jobs:
       - uses: "actions/upload-artifact@v4"
         with:
           name: "OpenCASCADE.gd-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
-          path: "./demo/addons/OpenCASCADE.gd/**"
+          path: "demo/addons/OpenCASCADE.gd/**"
 
       - uses: "actions/upload-artifact@v4"
         with: # Build artifacts useful for debugging in a local environment
           name: "build-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
-          path: "./.scons-cache/\n./vcpkg/"
+          path: ".scons-cache/\n.vcpkg-cache\n./vcpkg/"
   merge:
     runs-on: "ubuntu-24.04"
     needs: "build"
