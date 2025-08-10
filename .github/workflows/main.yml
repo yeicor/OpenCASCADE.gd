@@ -92,9 +92,9 @@ jobs:
 
       # <Install and build>
 #      - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no ${scons_extra_args}"
-      - uses: "lukka/get-cmake@v4"
-      - uses: "lukka/run-vcpkg@v11"
-      - uses: "lukka/run-cmake@v10"
+      - uses: "lukka/get-cmake@v4.1.0"
+      - uses: "lukka/run-vcpkg@v11.5"
+      - uses: "lukka/run-cmake@v10.8"
         with:
           configurePreset: "vcpkg-ninja"
           configurePresetAdditionalArgs: > # TODO: Set these appropriately...
