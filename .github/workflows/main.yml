@@ -15,21 +15,21 @@ jobs:
       matrix:
         target:
           [ # https://docs.godotengine.org/en/stable/about/system_requirements.html
-            { platform: "linux", arch: "x86_64", os: "ubuntu-24.04" },
-            { platform: "linux", arch: "x86_32", os: "ubuntu-24.04" },
-            { platform: "linux", arch: "arm64", os: "ubuntu-24.04-arm" },
-            { platform: "linux", arch: "arm32", os: "ubuntu-24.04-arm" },
-            { platform: "windows", arch: "x86_64", os: "windows-2025" },
-            { platform: "windows", arch: "x86_32", os: "windows-2025" },
-            { platform: "windows", arch: "arm64", os: "windows-2025" },
-            { platform: "macos", arch: "arm64", os: "macos-15" },
-            { platform: "macos", arch: "x86_64", os: "macos-15" },
-            { platform: "web", arch: "wasm32", os: "ubuntu-24.04" },
-            { platform: "android", arch: "x86_64", os: "ubuntu-24.04" },
-            { platform: "android", arch: "x86_32", os: "ubuntu-24.04" },
-            { platform: "android", arch: "arm64", os: "ubuntu-24.04" },
-            { platform: "android", arch: "arm32", os: "ubuntu-24.04" },
-            { platform: "ios", arch: "arm64", os: "macos-15" },
+            { platform: "linux", arch: "x86_64", os: "ubuntu-24.04", vcpkg_triplet: "x64-linux" },
+            { platform: "linux", arch: "x86_32", os: "ubuntu-24.04", vcpkg_triplet: "x86-linux" },
+            { platform: "linux", arch: "arm64", os: "ubuntu-24.04-arm", vcpkg_triplet: "arm64-linux" },
+            { platform: "linux", arch: "arm32", os: "ubuntu-24.04-arm", vcpkg_triplet: "arm-linux" },
+            { platform: "windows", arch: "x86_64", os: "windows-2025", vcpkg_triplet: "x64-mingw-static" },
+            { platform: "windows", arch: "x86_32", os: "windows-2025", vcpkg_triplet: "x86-mingw-static" },
+            { platform: "windows", arch: "arm64", os: "windows-2025", vcpkg_triplet: "arm64-mingw-static" },
+            { platform: "macos", arch: "arm64", os: "macos-15", vcpkg_triplet: "arm64-osx" },
+            { platform: "macos", arch: "x86_64", os: "macos-15", vcpkg_triplet: "x64-osx" },
+            { platform: "web", arch: "wasm32", os: "ubuntu-24.04", vcpkg_triplet: "wasm32-emscripten-pic" },
+            { platform: "android", arch: "x86_64", os: "ubuntu-24.04", vcpkg_triplet: "x64-android" },
+            { platform: "android", arch: "x86_32", os: "ubuntu-24.04", vcpkg_triplet: "x86-android" },
+            { platform: "android", arch: "arm64", os: "ubuntu-24.04", vcpkg_triplet: "arm64-android" },
+            { platform: "android", arch: "arm32", os: "ubuntu-24.04", vcpkg_triplet: "arm-android" },
+            { platform: "ios", arch: "arm64", os: "macos-15", vcpkg_triplet: "arm64-ios" },
           ]
         target-type: [ "template_debug" ] # TODO: , "template_release"
         float-precision: [ "single" ] # TODO: , "double"
@@ -58,7 +58,7 @@ jobs:
         with:
           version: "4.0.12" # More recent than Godot's default, since we need allow-multiple-definition support
       - if: "matrix.target.platform == 'web'"
-        run: "echo 'scons_extra_args=threads=no' >> $GITHUB_ENV && echo 'LDFLAGS=-Wl,-allow-multiple-definition' >> $GITHUB_ENV"
+        run: "echo 'cmake_extra_args=-DGODOTCPP_THREADS=OFF' >> $GITHUB_ENV && echo 'LDFLAGS=-Wl,-allow-multiple-definition' >> $GITHUB_ENV"
       - if: "matrix.target.platform == 'android'"
         uses: "nttld/setup-ndk@v1"
         id: "setup-ndk"
@@ -69,22 +69,17 @@ jobs:
         run: 'echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV'
       # </Triplet-specific setup>
 
-      - uses: "actions/setup-python@v5"
-        with:
-          python-version: "3.x"
-      - shell: "bash"
-        run: "python -m pip install scons==4.9.1"
-
+      # <Cache restoration>
       - uses: "actions/cache/restore@v4"
         id: "scons-cache"
         with:
-          key: "scons-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
-          path: "./.scons-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
+          key: "build-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
+          path: "build" # When out of tree build is implemented, "build" can also be cached for even faster builds
       - uses: "actions/cache/restore@v4"
         id: "vcpkg-cache"
         with:
-          key: "vcpkg-${{ matrix.target.platform }}-${{ matrix.target.arch }}"  # Others don't matter for vcpkg
-          path: ".vcpkg-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
+          key: "vcpkg-${{ matrix.target.vcpkg_triplet }}"  # Others don't matter for vcpkg
+          path: ".vcpkg-cache"
       - shell: "bash"
         run: |
           ( [ -d .vcpkg-cache ] || mkdir .vcpkg-cache )
@@ -93,36 +88,48 @@ jobs:
           else
             echo "VCPKG_DEFAULT_BINARY_CACHE=$(realpath .vcpkg-cache)" >> $GITHUB_ENV;
           fi
+      # </Cache restoration>
 
-      - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no ${scons_extra_args}"
-        env:
-          SCONS_CACHE: ".scons-cache"
-          VCPKG_DISABLE_METRICS: "1"
+      # <Install and build>
+#      - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no ${scons_extra_args}"
+      - uses: "lukka/get-cmake@v4"
+      - uses: "lukka/run-vcpkg@v11"
+      - uses: "lukka/run-cmake@v10"
+        with:
+          configurePreset: "vcpkg-ninja"
+          configurePresetAdditionalArgs: > # TODO: Set these appropriately...
+            -DCMAKE_SYSTEM_NAME=${{ matrix.target.platform }}
+            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.target.arch }}
+            -DCMAKE_BUILD_TYPE=${{ matrix.target-type }}
+            -DGODOTCPP_PRECISION=${{ matrix.float-precision }}
+            -DVCPKG_TARGET_TRIPLET=${{ matrix.target.vcpkg_triplet }}
+            ${{ env.cmake_extra_args }}
+          buildPreset: "vcpkg-ninja"
+      # </Install and build>
 
+      # <Cache saving (always)>
       - uses: "actions/cache/save@v4"
         if: "always()"
         with:
           key: "${{ steps.scons-cache.outputs.cache-primary-key }}"
-          path: ".scons-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
+          path: "build"
       - uses: "actions/cache/save@v4"
         if: "always()"
         with:
           key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
-          path: ".vcpkg-cache" # When out of tree build is implemented, "build" can also be cached for even faster builds
+          path: ".vcpkg-cache"
+      # </Cache saving (always)>
 
-      - if: "${{ matrix.target.platform == 'windows' }}"
-        shell: "pwsh"
-        run: "Remove-Item demo/addons/OpenCASCADE.gd/* -Include *.exp,*.lib,*.pdb -Force"
-
+      # <Export artifacts>
       - uses: "actions/upload-artifact@v4"
         with:
           name: "OpenCASCADE.gd-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
           path: "demo/addons/OpenCASCADE.gd/**"
-
       - uses: "actions/upload-artifact@v4"
         with: # Build artifacts useful for debugging in a local environment
           name: "build-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
           path: ".scons-cache/\n.vcpkg-cache\n./vcpkg/"
+      # </Export artifacts>
   merge:
     runs-on: "ubuntu-24.04"
     needs: "build"

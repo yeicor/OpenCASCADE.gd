@@ -1,39 +1,15 @@
-# Ignore library files but not the gdextension file
-demo/addons/OpenCASCADE.gd/*
-!demo/addons/OpenCASCADE.gd/OpenCASCADE.gd.gdextension
-
-# Ignore custom.py
-/custom.py
-
-# Ignore generated compile_commands.json
-/compile_commands.json
-
 # Ignore generated source files
 /src/gen
 
-# Build artifacts. TODO: build out of tree (see SConstruct)
+# Build artifacts.
 /build/
-/src/**/*.o
-/src/**/*.os
-/src/**/*.so
-/src/**/*.obj
-/src/**/*.bc
-/src/**/*.pyc
-/src/**/*.dblite
-/src/**/*.pdb
-/src/**/*.lib
-/src/**/*.config
-/src/**/*.creator
-/src/**/*.creator.user
-/src/**/*.files
-/src/**/*.includes
-/src/**/*.idb
-/src/**/*.exp
 
 # IDEs
 /.idea/
 /.vscode/
 
 # Godot auto generated files
-/demo/*.gen.*
 /demo/.godot/
+# Ignore library files but not the gdextension file
+demo/addons/OpenCASCADE.gd/*
+!demo/addons/OpenCASCADE.gd/OpenCASCADE.gd.gdextension
