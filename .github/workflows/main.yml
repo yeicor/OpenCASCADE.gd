@@ -94,6 +94,7 @@ jobs:
           ${{ env.cmake_extra_args }}" >> $GITHUB_ENV
       - uses: "lukka/run-vcpkg@v11.5"
         with:
+          vcpkgJsonIgnores: "['**/vcpkg*/**/vcpkg.json']"
           doNotUpdateVcpkg: 'true'  # Use the checked out vcpkg version
           binaryCachePath: '.vcpkg-cache'
           runVcpkgInstall: 'true'
