@@ -96,12 +96,8 @@ jobs:
       - uses: "lukka/run-vcpkg@v11.5"
         with:
           doNotUpdateVcpkg: 'true'  # Use the checked out vcpkg version
-          runVcpkgInstall: 'true'  # Attempt to fix vcpkg_triplet issues (should not be needed)
         env:
           VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
-          VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
-          VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
-          VCPKG_BINARY_SOURCES: ""  # Disable run-vcpkg's default binary sources, since we use our own cache
       - uses: "lukka/run-cmake@v10.8"
         with:
           configurePreset: "vcpkg-ninja"
@@ -113,8 +109,6 @@ jobs:
             ${{ env.cmake_extra_args }}]
           buildPreset: "vcpkg-ninja"
         env:
-          VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
-          VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
           VCPKG_BINARY_SOURCES: ""  # Disable run-vcpkg's default binary sources, since we use our own cache
       # </Install and build>
