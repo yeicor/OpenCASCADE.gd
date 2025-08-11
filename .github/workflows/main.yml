@@ -77,7 +77,14 @@ jobs:
           key: "vcpkg-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
           path: ".vcpkg-cache"
       - shell: "bash"
-        run: "[ -d .vcpkg-cache ] || mkdir .vcpkg-cache"
+        run: |
+          [ -d .vcpkg-cache ] || mkdir .vcpkg-cache
+          abs_path=$(realpath .vcpkg-cache)
+          # Check if WSL environment (wslpath expects /mnt/c/ style paths)
+          if [ ${{ runner.os }} == 'Windows' ]; then # Probably Git Bash or MSYS on Windows: convert /c/Users/... to C:\Users\...
+            abs_path=$(echo "$abs_path" | sed -E 's#^/([a-z])/#\U\1:\\#I; s#/#\\#g')
+          fi
+          echo "VCPKG_BINARY_SOURCES=clear;files,${abs_path},readwrite" >> $GITHUB_ENV
       # </Cache restoration>
 
       # <Install and build>
