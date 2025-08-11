@@ -22,10 +22,11 @@ if(DEFINED ENV{__OPENCASCADE_GD_CMAKE_ARGS})
 else()
     set(PASSED_CMAKE_ARGS "")
 endif()
+set(PASSED_CMAKE_ARGS "-D_INSTALL_TO_ROOT=${FROM};${PASSED_CMAKE_ARGS}")
 message(STATUS "Using cmake args: ${PASSED_CMAKE_ARGS} (override with __OPENCASCADE_GD_CMAKE_ARGS)")
 vcpkg_configure_cmake(
     SOURCE_PATH "${TO}"
-    OPTIONS "-D_INSTALL_TO_ROOT=${FROM}" ${PASSED_CMAKE_ARGS}
+    OPTIONS ${PASSED_CMAKE_ARGS}
 )
 
 vcpkg_install_cmake()
@@ -36,11 +37,6 @@ vcpkg_copy_pdbs()
 vcpkg_install_copyright(FILE_LIST "${TO}/LICENSE")
 
 set(VCPKG_POLICY_EMPTY_INCLUDE_FOLDER enabled)
-
-file(REMOVE_RECURSE
-    "${CURRENT_PACKAGES_DIR}/debug/include"
-    "${CURRENT_PACKAGES_DIR}/debug/share"
-)
 
 # Write a timestamp file to this port directory to always rebuild it (using the updated local files)
 string(TIMESTAMP CURRENT_TIME UTC)

@@ -15,21 +15,21 @@ jobs:
       matrix:
         target:
           [ # https://docs.godotengine.org/en/stable/about/system_requirements.html
-            { cmake_sys_name: "Linux", cmake_sys_proc: "x86_64", os: "ubuntu-24.04", vcpkg_triplet: "x64-linux" },
-            { cmake_sys_name: "Linux", cmake_sys_proc: "x86", os: "ubuntu-24.04", vcpkg_triplet: "x86-linux" },
-            { cmake_sys_name: "Linux", cmake_sys_proc: "arm64-v8a", os: "ubuntu-24.04-arm", vcpkg_triplet: "arm64-linux" },
-            { cmake_sys_name: "Linux", cmake_sys_proc: "armeabi-v7a", os: "ubuntu-24.04-arm", vcpkg_triplet: "arm-linux" },
-            { cmake_sys_name: "Windows", cmake_sys_proc: "x86_64", os: "windows-2025", vcpkg_triplet: "x64-mingw-static" },
-            { cmake_sys_name: "Windows", cmake_sys_proc: "x86", os: "windows-2025", vcpkg_triplet: "x86-mingw-static" },
-            { cmake_sys_name: "Windows", cmake_sys_proc: "arm64-v8a", os: "windows-2025", vcpkg_triplet: "arm64-mingw-static" },
-            { cmake_sys_name: "Darwin", cmake_sys_proc: "arm64-v8a", os: "macos-15", vcpkg_triplet: "arm64-osx" },
-            { cmake_sys_name: "Darwin", cmake_sys_proc: "x86_64", os: "macos-15", vcpkg_triplet: "x64-osx" },
-            { cmake_sys_name: "Emscripten", cmake_sys_proc: "wasm32", os: "ubuntu-24.04", vcpkg_triplet: "wasm32-emscripten-pic" },
-            { cmake_sys_name: "Android", cmake_sys_proc: "x86_64", os: "ubuntu-24.04", vcpkg_triplet: "x64-android" },
-            { cmake_sys_name: "Android", cmake_sys_proc: "x86", os: "ubuntu-24.04", vcpkg_triplet: "x86-android" },
-            { cmake_sys_name: "Android", cmake_sys_proc: "arm64-v8a", os: "ubuntu-24.04", vcpkg_triplet: "arm64-android" },
-            { cmake_sys_name: "Android", cmake_sys_proc: "armeabi-v7a", os: "ubuntu-24.04", vcpkg_triplet: "arm-android" },
-            { cmake_sys_name: "iOS", cmake_sys_proc: "arm64-v8a", os: "macos-15", vcpkg_triplet: "arm64-ios" },
+            { os: "ubuntu-24.04", vcpkg_triplet: "x64-linux" },
+            { os: "ubuntu-24.04", vcpkg_triplet: "x86-linux" },
+            { os: "ubuntu-24.04-arm", vcpkg_triplet: "arm64-linux" },
+            { os: "ubuntu-24.04-arm", vcpkg_triplet: "arm-linux" },
+            { os: "windows-2025", vcpkg_triplet: "x64-mingw-static" },
+            { os: "windows-2025", vcpkg_triplet: "x86-mingw-static" },
+            { os: "windows-2025", vcpkg_triplet: "arm64-mingw-static" },
+            { os: "macos-15", vcpkg_triplet: "arm64-osx" },
+            { os: "macos-15", vcpkg_triplet: "x64-osx" },
+            { os: "ubuntu-24.04", vcpkg_triplet: "wasm32-emscripten-pic" },
+            { os: "ubuntu-24.04", vcpkg_triplet: "x64-android" },
+            { os: "ubuntu-24.04", vcpkg_triplet: "x86-android" },
+            { os: "ubuntu-24.04", vcpkg_triplet: "arm64-android" },
+            { os: "ubuntu-24.04", vcpkg_triplet: "arm-android" },
+            { os: "macos-15", vcpkg_triplet: "arm64-ios" },
           ]
         # target-type: [ "template_debug", "template_release" ] # Note: vcpkg forces building both on a single run
         float-precision: [ "single" ] # TODO: , "double"
@@ -41,39 +41,39 @@ jobs:
           submodules: "recursive"
 
       # <Triplet-specific setup>
-      - if: "matrix.target.cmake_sys_name == 'Linux' && matrix.target.cmake_sys_proc == 'x86'"
+      - if: "matrix.target.vcpkg_triplet == 'x86-linux'"
         run: "sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib"
-      - if: "matrix.target.cmake_sys_name == 'Linux' && matrix.target.cmake_sys_proc == 'armeabi-v7a'"
+      - if: "matrix.target.vcpkg_triplet == 'arm-linux'"
         run: "sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf && echo \"cmake_extra_args='-DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc', '-DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++'\" >> $GITHUB_ENV"
       - if: "matrix.target.os == 'ubuntu-24.04' || matrix.target.os == 'ubuntu-24.04-arm'"
         run: "sudo apt-get update && sudo apt-get install -y libx11-dev libgl1-mesa-dev libfontconfig-dev"
-      - if: "matrix.target.cmake_sys_name == 'Windows'"
+      - if: "matrix.target.os == 'windows-2025'"
         uses: "egor-tensin/setup-mingw@v2"
         with:
-          version: "12.2.0" # It seems like updates are broken (follow godot-cpp)
+          version: "12.2.0" # It seems like newer versions are broken (follow godot-cpp)
       - if: "matrix.target.os == 'macos-15'"
         run: "brew install autoconf automake autoconf-archive"
-      - if: "matrix.target.cmake_sys_name == 'Emscripten'"
+      - if: "matrix.target.vcpkg_triplet == 'wasm32-emscripten-pic'"
         uses: "mymindstorm/setup-emsdk@v14"
         with:
           version: "4.0.12" # More recent than Godot's default, since we need allow-multiple-definition support
-      - if: "matrix.target.cmake_sys_name == 'Emscripten'"
+      - if: "matrix.target.vcpkg_triplet == 'wasm32-emscripten-pic'"
         run: "echo \"cmake_extra_args='-DGODOTCPP_THREADS=OFF'\" >> $GITHUB_ENV && echo 'LDFLAGS=-Wl,-allow-multiple-definition' >> $GITHUB_ENV"
-      - if: "matrix.target.cmake_sys_name == 'Android'"
+      - if: "contains(matrix.target.vcpkg_triplet, '-android')"
         uses: "nttld/setup-ndk@v1"
         id: "setup-ndk"
         with:
           ndk-version: "r23c" # Same as https://github.com/godotengine/godot/blob/<GODOT_VERSION>/platform/android/detect.py
           link-to-sdk: true
-      - if: "matrix.target.cmake_sys_name == 'Android'"
-        run: "echo \"ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}\" >> $GITHUB_ENV && echo \"cmake_extra_args='-DANDROID_ABI=${{ matrix.target.cmake_sys_proc }}', '-UCMAKE_SYSTEM_PROCESSOR'\""
+      - if: "contains(matrix.target.vcpkg_triplet, '-android')"
+        run: "echo \"ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}\" >> $GITHUB_ENV"  # && echo \"cmake_extra_args='-DANDROID_ABI=${{ matrix.target.cmake_sys_proc }}', '-UCMAKE_SYSTEM_PROCESSOR'\"
       # </Triplet-specific setup>
 
       # <Cache restoration>
       - uses: "actions/cache/restore@v4"
         id: "vcpkg-cache"
         with:
-          key: "vcpkg-${{ matrix.target.vcpkg_triplet }}"  # Others don't matter for vcpkg
+          key: "vcpkg-${{ matrix.target.vcpkg_triplet }}-${{ matrix.float-precision }}"
           path: ".vcpkg-cache"
       - shell: "bash"
         run: "[ -d .vcpkg-cache ] || mkdir .vcpkg-cache"
@@ -83,9 +83,6 @@ jobs:
       - uses: "lukka/get-cmake@v4.1.0"
       - run: | # HACK: Customize the vcpkg install of the main repo package with custom CMAKE_ARGS
           echo "__OPENCASCADE_GD_CMAKE_ARGS=\
-          -DCMAKE_SYSTEM_NAME=${{ matrix.target.cmake_sys_name }} \
-          -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.target.cmake_sys_proc }} \
-          -DVCPKG_TARGET_TRIPLET=${{ matrix.target.vcpkg_triplet }} \
           -DGODOTCPP_PRECISION=${{ matrix.target.float_precision }} \
           ${{ env.cmake_extra_args }}" >> $GITHUB_ENV
       - uses: "lukka/run-vcpkg@v11.5"
@@ -95,10 +92,11 @@ jobs:
           binaryCachePath: '.vcpkg-cache'
           runVcpkgInstall: 'true'
         env:
-          VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
+          VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}" # This is the target triplet for the vcpkg install
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
           VCPKG_OVERLAY_PORTS: "vcpkg_ports"
-          VCPKG_BINARY_SOURCES: "" # Avoid deprecation warning (due to lukka/run-vcpkg)
+          VCPKG_BINARY_SOURCES: "clear" # Avoid deprecation warning (due to lukka/run-vcpkg)
+          VCPKG_DISABLE_METRICS: "1" # Avoid deprecation warning (due to lukka/run-vcpkg)
       # </Install and build>
 
       # <Cache saving (always)>
@@ -113,11 +111,11 @@ jobs:
       # <Export artifacts>
       - uses: "actions/upload-artifact@v4"
         with:
-          name: "OpenCASCADE.gd-${{ matrix.target.cmake_sys_name }}-${{ matrix.target.cmake_sys_proc }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
+          name: "OpenCASCADE.gd-${{ matrix.target.vcpkg_triplet }}-${{ matrix.float-precision }}"
           path: "demo/addons/OpenCASCADE.gd/**"
       - uses: "actions/upload-artifact@v4"
         with: # Build artifacts useful for debugging in a local environment
-          name: "build-${{ matrix.target.cmake_sys_name }}-${{ matrix.target.cmake_sys_proc }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
+          name: "build-${{ matrix.target.vcpkg_triplet }}-${{ matrix.float-precision }}"
           path: ".vcpkg-cache\n./vcpkg/"
       # </Export artifacts>
   merge:
