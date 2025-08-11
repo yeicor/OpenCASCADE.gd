@@ -81,14 +81,6 @@ jobs:
         with:
           key: "vcpkg-${{ matrix.target.vcpkg_triplet }}"  # Others don't matter for vcpkg
           path: ".vcpkg-cache"
-      - shell: "bash"
-        run: |
-          ( [ -d .vcpkg-cache ] || mkdir .vcpkg-cache )
-          if [ "${{ matrix.target.cmake_sys_name }}" == "Windows" ]; then
-            echo "VCPKG_DEFAULT_BINARY_CACHE=$(realpath .vcpkg-cache | sed -E 's#^/([a-z])/#\U\1:\\#I; s#/#\\#g')" >> $GITHUB_ENV;
-          else
-            echo "VCPKG_DEFAULT_BINARY_CACHE=$(realpath .vcpkg-cache)" >> $GITHUB_ENV;
-          fi
       # </Cache restoration>
 
       # <Install and build>
@@ -96,8 +88,10 @@ jobs:
       - uses: "lukka/run-vcpkg@v11.5"
         with:
           doNotUpdateVcpkg: 'true'  # Use the checked out vcpkg version
+          binaryCachePath: '.vcpkg-cache'
         env:
           VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
+          VCPKG_BINARY_SOURCES: ""
       - uses: "lukka/run-cmake@v10.8"
         with:
           configurePreset: "vcpkg-ninja"
@@ -110,10 +104,7 @@ jobs:
             ${{ env.cmake_extra_args }}]
           buildPreset: "vcpkg-ninja"
         env:
-          VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
-          VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
-          VCPKG_BINARY_SOURCES: ""  # Disable run-vcpkg's default binary sources, since we use our own cache
       # </Install and build>
 
       # <Cache saving (always)>
