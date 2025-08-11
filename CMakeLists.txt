@@ -1,13 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 
-# Ensure to pick up the default triplet from the environment if any. This helps
-# driving the vcpkg triplet in the same way either when starting vcpkg directly,
-# or when letting CMake start vcpkg at configure/generate time.
-# Note: this logic must happen before PROJECT command.
-if(DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
-    set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "The vcpkg triplet")
-endif()
-
 # Set the C++ standard and project name
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,6 +8,7 @@ project(OpenCASCADE.gd CXX)
 
 # Godot C++ bindings
 add_subdirectory(godot-cpp)
+set(GODOTCPP_DISABLE_EXCEPTIONS OFF)  # Required for OpenCASCADE
 
 # Dependencies
 find_package(OpenCASCADE REQUIRED)

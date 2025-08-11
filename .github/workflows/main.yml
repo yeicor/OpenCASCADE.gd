@@ -104,6 +104,7 @@ jobs:
             ${{ env.cmake_extra_args }}]
           buildPreset: "vcpkg-ninja"
         env:
+          VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
       # </Install and build>
 
