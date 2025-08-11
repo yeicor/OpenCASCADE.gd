@@ -58,7 +58,7 @@ jobs:
         with:
           version: "4.0.12" # More recent than Godot's default, since we need allow-multiple-definition support
       - if: "matrix.target.platform == 'web'"
-        run: "echo 'cmake_extra_args=\\'-DGODOTCPP_THREADS=OFF\\'' >> $GITHUB_ENV && echo 'LDFLAGS=-Wl,-allow-multiple-definition' >> $GITHUB_ENV"
+        run: "echo \"cmake_extra_args='-DGODOTCPP_THREADS=OFF'\" >> $GITHUB_ENV && echo 'LDFLAGS=-Wl,-allow-multiple-definition' >> $GITHUB_ENV"
       - if: "matrix.target.platform == 'android'"
         uses: "nttld/setup-ndk@v1"
         id: "setup-ndk"
@@ -91,9 +91,14 @@ jobs:
       # </Cache restoration>
 
       # <Install and build>
-#      - run: "scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }} disable_exceptions=no ${scons_extra_args}"
       - uses: "lukka/get-cmake@v4.1.0"
       - uses: "lukka/run-vcpkg@v11.5"
+        with:
+          doNotUpdateVcpkg: 'true'  # Use the checked out vcpkg version
+          runVcpkgInstall: 'true'  # Avoid mixing it with the cmake configure which can be confused with CMAKE_SYSTEM_* variables
+        env:
+          VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
+          VCPKG_BUILD_TYPE: "${{ matrix.target-type }}"  # Optional?
       - uses: "lukka/run-cmake@v10.8"
         with:
           configurePreset: "vcpkg-ninja"
