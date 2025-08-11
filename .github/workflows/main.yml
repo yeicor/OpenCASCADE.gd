@@ -105,7 +105,6 @@ jobs:
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
           VCPKG_OVERLAY_PORTS: "vcpkg_ports"
           VCPKG_INSTALLED_DIR: "vcpkg/installed"
-          VCPKG_BINARY_SOURCES: "clear;files,.vcpkg-cache,readwrite" # Use the cache for binary sources
           VCPKG_DISABLE_METRICS: "1" # Avoid deprecation warning (due to lukka/run-vcpkg)
       # </Install and build>
 
