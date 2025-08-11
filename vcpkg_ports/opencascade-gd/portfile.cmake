@@ -25,7 +25,7 @@ endif()
 message(STATUS "Using cmake args: ${PASSED_CMAKE_ARGS} (override with __OPENCASCADE_GD_CMAKE_ARGS)")
 vcpkg_configure_cmake(
     SOURCE_PATH "${TO}"
-    OPTIONS ${PASSED_CMAKE_ARGS}
+    OPTIONS "-D_INSTALL_TO_ROOT=${FROM}" ${PASSED_CMAKE_ARGS}
 )
 
 vcpkg_install_cmake()

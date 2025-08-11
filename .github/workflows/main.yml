@@ -71,11 +71,6 @@ jobs:
 
       # <Cache restoration>
       - uses: "actions/cache/restore@v4"
-        id: "build-cache"
-        with:
-          key: "build-${{ matrix.target.cmake_sys_name }}-${{ matrix.target.cmake_sys_proc }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
-          path: "build"
-      - uses: "actions/cache/restore@v4"
         id: "vcpkg-cache"
         with:
           key: "vcpkg-${{ matrix.target.vcpkg_triplet }}"  # Others don't matter for vcpkg
@@ -101,15 +96,11 @@ jobs:
         env:
           VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
+          VCPKG_OVERLAY_PORTS: "vcpkg_ports"
           VCPKG_BINARY_SOURCES: "" # Avoid deprecation warning (due to lukka/run-vcpkg)
       # </Install and build>
 
       # <Cache saving (always)>
-      - uses: "actions/cache/save@v4"
-        if: "always()"
-        with:
-          key: "${{ steps.build-cache.outputs.cache-primary-key }}"
-          path: "build"
       - run: "find .vcpkg-cache -type f"  # Debugging: list files in the cache
       - uses: "actions/cache/save@v4"
         if: "always()"
@@ -126,7 +117,7 @@ jobs:
       - uses: "actions/upload-artifact@v4"
         with: # Build artifacts useful for debugging in a local environment
           name: "build-${{ matrix.target.cmake_sys_name }}-${{ matrix.target.cmake_sys_proc }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
-          path: "build/\n.vcpkg-cache\n./vcpkg/"
+          path: ".vcpkg-cache\n./vcpkg/"
       # </Export artifacts>
   merge:
     runs-on: "ubuntu-24.04"
