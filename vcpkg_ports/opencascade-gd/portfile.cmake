@@ -1,6 +1,6 @@
 # HACK: Copy the source files from the current repository to the buildtree (instead of using a clean repo reference).
 set(FROM "${CURRENT_PORT_DIR}/../..")
-set(TO "${CURRENT_BUILDTREES_DIR}/workspace")
+set(TO "${CURRENT_BUILDTREES_DIR}/src/workspace")
 file(MAKE_DIRECTORY "${TO}")
 set(REPOS "." "godot-cpp")
 foreach(REPO IN LISTS REPOS)
@@ -41,3 +41,8 @@ file(REMOVE_RECURSE
     "${CURRENT_PACKAGES_DIR}/debug/include"
     "${CURRENT_PACKAGES_DIR}/debug/share"
 )
+
+# Write a timestamp file to this port directory to always rebuild it (using the updated local files)
+string(TIMESTAMP CURRENT_TIME UTC)
+file(WRITE "${CURRENT_PORT_DIR}/.last_build" "${CURRENT_TIME}\n")
+message(STATUS "Wrote timestamp to ${CURRENT_PORT_DIR}/.last_build")

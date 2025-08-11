@@ -80,6 +80,7 @@ jobs:
         with:
           key: "vcpkg-${{ matrix.target.vcpkg_triplet }}"  # Others don't matter for vcpkg
           path: ".vcpkg-cache"
+      - run: "[ -d .vcpkg-cache ] || mkdir .vcpkg-cache"
       # </Cache restoration>
 
       # <Install and build>

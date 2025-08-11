@@ -10,6 +10,7 @@
 
 # VCPKG
 /vcpkg_installed/
+/vcpkg_ports/*/.last_build
 
 # Godot auto generated files
 /demo/.godot/
