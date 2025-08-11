@@ -8,6 +8,9 @@
 /.idea/
 /.vscode/
 
+# VCPKG
+/vcpkg_installed/
+
 # Godot auto generated files
 /demo/.godot/
 # Ignore library files but not the gdextension file

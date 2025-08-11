@@ -31,7 +31,7 @@ jobs:
             { cmake_sys_name: "Android", cmake_sys_proc: "armeabi-v7a", os: "ubuntu-24.04", vcpkg_triplet: "arm-android" },
             { cmake_sys_name: "iOS", cmake_sys_proc: "arm64-v8a", os: "macos-15", vcpkg_triplet: "arm64-ios" },
           ]
-        target-type: [ "template_debug" ] # TODO: , "template_release"
+        # target-type: [ "template_debug", "template_release" ] # Note: vcpkg forces building both on a single run
         float-precision: [ "single" ] # TODO: , "double"
 
     runs-on: "${{ matrix.target.os }}"
@@ -84,24 +84,20 @@ jobs:
 
       # <Install and build>
       - uses: "lukka/get-cmake@v4.1.0"
+      - run: | # HACK: Customize the vcpkg install of the main repo package with custom CMAKE_ARGS
+          echo "__OPENCASCADE_GD_CMAKE_ARGS=\
+          -DCMAKE_SYSTEM_NAME=${{ matrix.target.cmake_sys_name }} \
+          -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.target.cmake_sys_proc }} \
+          -DVCPKG_TARGET_TRIPLET=${{ matrix.target.vcpkg_triplet }} \
+          -DGODOTCPP_PRECISION=${{ matrix.target.float_precision }} \
+          ${{ env.cmake_extra_args }}" >> $GITHUB_ENV
       - uses: "lukka/run-vcpkg@v11.5"
         with:
           doNotUpdateVcpkg: 'true'  # Use the checked out vcpkg version
           binaryCachePath: '.vcpkg-cache'
+          runVcpkgInstall: 'true'
         env:
           VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
-      - uses: "lukka/run-cmake@v10.8"
-        with:
-          configurePreset: "vcpkg-ninja"
-          configurePresetAdditionalArgs: >
-            ['-DCMAKE_SYSTEM_NAME=${{ matrix.target.cmake_sys_name }}',
-            '-DCMAKE_SYSTEM_PROCESSOR=${{ matrix.target.cmake_sys_proc }}',
-            '-DCMAKE_BUILD_TYPE=${{ matrix.target-type }}',
-            '-DVCPKG_TARGET_TRIPLET=${{ matrix.target.vcpkg_triplet }}',
-            '-DGODOTCPP_PRECISION=${{ matrix.float-precision }}',
-            ${{ env.cmake_extra_args }}]
-          buildPreset: "vcpkg-ninja"
-        env:
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
           VCPKG_BINARY_SOURCES: "" # Avoid deprecation warning (due to lukka/run-vcpkg)
       # </Install and build>
