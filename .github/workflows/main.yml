@@ -106,9 +106,12 @@ jobs:
             '-DCMAKE_SYSTEM_PROCESSOR=${{ matrix.target.cmake_sys_proc }}',
             '-DCMAKE_BUILD_TYPE=${{ matrix.target-type }}',
             '-DGODOTCPP_PRECISION=${{ matrix.float-precision }}',
+            '-DGODOTCPP_DISABLE_EXCEPTIONS=OFF',
             ${{ env.cmake_extra_args }}]
           buildPreset: "vcpkg-ninja"
         env:
+          VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
+          VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
           VCPKG_BINARY_SOURCES: ""  # Disable run-vcpkg's default binary sources, since we use our own cache
       # </Install and build>
