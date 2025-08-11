@@ -31,7 +31,8 @@ jobs:
             { os: "ubuntu-24.04", vcpkg_triplet: "arm-android" },
             { os: "macos-15", vcpkg_triplet: "arm64-ios" },
           ]
-        # target-type: [ "template_debug", "template_release" ] # Note: vcpkg forces building both on a single run
+        # Note: vcpkg forces building both Debug and Release on a single run. This is not the same as the templates!
+        target-type: [ "template_debug" ] # , "template_release"
         float-precision: [ "single" ] # TODO: , "double"
 
     runs-on: "${{ matrix.target.os }}"

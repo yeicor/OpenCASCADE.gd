@@ -51,7 +51,7 @@ macos.arm64.single.release = "./libOpenCASCADE.gd.macos.template_release.arm64.d
 macos.arm64.double.release = "./libOpenCASCADE.gd.macos.template_release.arm64.double.dylib"
 
 web.wasm32.single.debug = "./libOpenCASCADE.gd.web.template_debug.wasm32.nothreads.wasm"
-web.wasm32.double.debug = "./libOpenCASCADE.gd.web.template_release.wasm32.double.nothreads.wasm"
+web.wasm32.double.debug = "./libOpenCASCADE.gd.web.template_debug.wasm32.double.nothreads.wasm"
 web.wasm32.single.release = "./libOpenCASCADE.gd.web.template_release.wasm32.nothreads.wasm"
 web.wasm32.double.release = "./libOpenCASCADE.gd.web.template_release.wasm32.double.nothreads.wasm"
 
@@ -60,20 +60,20 @@ android.x86_64.double.debug = "./libOpenCASCADE.gd.android.template_debug.x86_64
 android.x86_64.single.release = "./libOpenCASCADE.gd.android.template_release.x86_64.so"
 android.x86_64.double.release = "./libOpenCASCADE.gd.android.template_release.x86_64.double.so"
 
-android.x86_32.single.debug = "./libOpenCASCADE.gd.android.template_debug.x86_64.so"
-android.x86_32.double.debug = "./libOpenCASCADE.gd.android.template_debug.x86_64.double.so"
-android.x86_32.single.release = "./libOpenCASCADE.gd.android.template_release.x86_64.so"
-android.x86_32.double.release = "./libOpenCASCADE.gd.android.template_release.x86_64.double.so"
+android.x86_32.single.debug = "./libOpenCASCADE.gd.android.template_debug.x86_32.so"
+android.x86_32.double.debug = "./libOpenCASCADE.gd.android.template_debug.x86_32.double.so"
+android.x86_32.single.release = "./libOpenCASCADE.gd.android.template_release.x86_32.so"
+android.x86_32.double.release = "./libOpenCASCADE.gd.android.template_release.x86_32.double.so"
 
 android.arm64.single.debug = "./libOpenCASCADE.gd.android.template_debug.arm64.so"
 android.arm64.double.debug = "./libOpenCASCADE.gd.android.template_debug.arm64.double.so"
 android.arm64.single.release = "./libOpenCASCADE.gd.android.template_release.arm64.so"
 android.arm64.double.release = "./libOpenCASCADE.gd.android.template_release.arm64.double.so"
 
-android.arm32.single.debug = "./libOpenCASCADE.gd.android.template_debug.arm64.so"
-android.arm32.double.debug = "./libOpenCASCADE.gd.android.template_debug.arm64.double.so"
-android.arm32.single.release = "./libOpenCASCADE.gd.android.template_release.arm64.so"
-android.arm32.double.release = "./libOpenCASCADE.gd.android.template_release.arm64.double.so"
+android.arm32.single.debug = "./libOpenCASCADE.gd.android.template_debug.arm32.so"
+android.arm32.double.debug = "./libOpenCASCADE.gd.android.template_debug.arm32.double.so"
+android.arm32.single.release = "./libOpenCASCADE.gd.android.template_release.arm32.so"
+android.arm32.double.release = "./libOpenCASCADE.gd.android.template_release.arm32.double.so"
 
 ios.arm64.single.debug = "./libOpenCASCADE.gd.ios.template_debug.arm64.dylib"
 ios.arm64.double.debug = "./libOpenCASCADE.gd.ios.template_debug.arm64.double.dylib"

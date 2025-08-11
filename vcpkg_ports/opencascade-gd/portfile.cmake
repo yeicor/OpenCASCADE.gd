@@ -14,7 +14,6 @@ foreach(REPO IN LISTS REPOS)
         message(FATAL_ERROR "Failed to copy sources from ${FROM} to ${TO}")
     endif()
 endforeach()
-
 message(STATUS "Copied sources from ${FROM} to ${TO} respecting .gitignore")
 
 if(DEFINED ENV{__OPENCASCADE_GD_CMAKE_ARGS})
