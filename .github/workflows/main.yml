@@ -74,7 +74,7 @@ jobs:
       - uses: "actions/cache/restore@v4"
         id: "vcpkg-cache"
         with:
-          key: "vcpkg-${{ matrix.target.vcpkg_triplet }}-${{ matrix.float-precision }}"
+          key: "vcpkg-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
           path: ".vcpkg-cache"
       - shell: "bash"
         run: "[ -d .vcpkg-cache ] || mkdir .vcpkg-cache"
@@ -84,6 +84,7 @@ jobs:
       - uses: "lukka/get-cmake@v4.1.0"
       - run: | # HACK: Customize the vcpkg install of the main repo package with custom CMAKE_ARGS
           echo "__OPENCASCADE_GD_CMAKE_ARGS=\
+          -DGODOTCPP_TARGET=${{ matrix.target.target-type }} \
           -DGODOTCPP_PRECISION=${{ matrix.target.float_precision }} \
           ${{ env.cmake_extra_args }}" >> $GITHUB_ENV
       - uses: "lukka/run-vcpkg@v11.5"
@@ -96,7 +97,8 @@ jobs:
           VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}" # This is the target triplet for the vcpkg install
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
           VCPKG_OVERLAY_PORTS: "vcpkg_ports"
-          VCPKG_BINARY_SOURCES: "clear" # Avoid deprecation warning (due to lukka/run-vcpkg)
+          VCPKG_INSTALLED_DIR: "vcpkg/installed"
+          VCPKG_BINARY_SOURCES: "clear;files,.vcpkg-cache,readwrite" # Use the cache for binary sources
           VCPKG_DISABLE_METRICS: "1" # Avoid deprecation warning (due to lukka/run-vcpkg)
       # </Install and build>
 
@@ -112,11 +114,11 @@ jobs:
       # <Export artifacts>
       - uses: "actions/upload-artifact@v4"
         with:
-          name: "OpenCASCADE.gd-${{ matrix.target.vcpkg_triplet }}-${{ matrix.float-precision }}"
+          name: "OpenCASCADE.gd-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
           path: "demo/addons/OpenCASCADE.gd/**"
       - uses: "actions/upload-artifact@v4"
         with: # Build artifacts useful for debugging in a local environment
-          name: "build-${{ matrix.target.vcpkg_triplet }}-${{ matrix.float-precision }}"
+          name: "build-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
           path: ".vcpkg-cache\n./vcpkg/"
       # </Export artifacts>
   merge:
