@@ -100,6 +100,8 @@ jobs:
         env:
           VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
+          VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
+          VCPKG_BINARY_SOURCES: ""  # Disable run-vcpkg's default binary sources, since we use our own cache
       - uses: "lukka/run-cmake@v10.8"
         with:
           configurePreset: "vcpkg-ninja"
