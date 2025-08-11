@@ -100,6 +100,7 @@ jobs:
           doNotUpdateVcpkg: 'true'  # Use the checked out vcpkg version
           binaryCachePath: '.vcpkg-cache'
           runVcpkgInstall: 'true'
+          runVcpkgFormatString: '[`install`, `opencascade-gd`, `--classic`]'
         env:
           VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}" # This is the target triplet for the vcpkg install
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
