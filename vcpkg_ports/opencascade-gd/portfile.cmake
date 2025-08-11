@@ -26,6 +26,7 @@ message(STATUS "Using cmake args: ${PASSED_CMAKE_ARGS} (override with __OPENCASC
 vcpkg_configure_cmake(
     SOURCE_PATH "${TO}"
     OPTIONS ${PASSED_CMAKE_ARGS}
+    MAYBE_UNUSED_VARIABLES CMAKE_C_COMPILER_LAUNCHER _INSTALL_TO_ROOT
 )
 
 vcpkg_install_cmake()
