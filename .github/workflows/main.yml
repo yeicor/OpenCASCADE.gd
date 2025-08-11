@@ -42,9 +42,9 @@ jobs:
 
       # <Triplet-specific setup>
       - if: "matrix.target.cmake_sys_name == 'Linux' && matrix.target.cmake_sys_proc == 'x86'"
-        run: "sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib"
+        run: "sudo apt-get update && sudo apt-get install -y g++-multilib"
       - if: "matrix.target.cmake_sys_name == 'Linux' && matrix.target.cmake_sys_proc == 'armv7'"
-        run: "sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf && echo \"cmake_extra_args='-DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc', '-DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++'\" >> $GITHUB_ENV"
+        run: "sudo apt-get update && sudo apt-get install -y g++-arm-linux-gnueabihf && echo \"cmake_extra_args=''-DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++'\" >> $GITHUB_ENV"
       - if: "matrix.target.os == 'ubuntu-24.04' || matrix.target.os == 'ubuntu-24.04-arm'"
         run: "sudo apt-get update && sudo apt-get install -y libx11-dev libgl1-mesa-dev libfontconfig-dev"
       - if: "matrix.target.cmake_sys_name == 'Windows'"
