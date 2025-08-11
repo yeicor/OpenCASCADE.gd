@@ -58,7 +58,7 @@ jobs:
         with:
           version: "4.0.12" # More recent than Godot's default, since we need allow-multiple-definition support
       - if: "matrix.target.platform == 'web'"
-        run: "echo 'cmake_extra_args=-DGODOTCPP_THREADS=OFF' >> $GITHUB_ENV && echo 'LDFLAGS=-Wl,-allow-multiple-definition' >> $GITHUB_ENV"
+        run: "echo 'cmake_extra_args=\\'-DGODOTCPP_THREADS=OFF\\'' >> $GITHUB_ENV && echo 'LDFLAGS=-Wl,-allow-multiple-definition' >> $GITHUB_ENV"
       - if: "matrix.target.platform == 'android'"
         uses: "nttld/setup-ndk@v1"
         id: "setup-ndk"
@@ -103,7 +103,7 @@ jobs:
             '-DCMAKE_BUILD_TYPE=${{ matrix.target-type }}',
             '-DGODOTCPP_PRECISION=${{ matrix.float-precision }}',
             '-DVCPKG_TARGET_TRIPLET=${{ matrix.target.vcpkg_triplet }}',
-            '${{ env.cmake_extra_args }}']
+            ${{ env.cmake_extra_args }}]
           buildPreset: "vcpkg-ninja"
       # </Install and build>
 
