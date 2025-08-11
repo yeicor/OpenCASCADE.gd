@@ -71,7 +71,7 @@ jobs:
 
       # <Cache restoration>
       - uses: "actions/cache/restore@v4"
-        id: "scons-cache"
+        id: "build-cache"
         with:
           key: "build-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
           path: "build" # When out of tree build is implemented, "build" can also be cached for even faster builds
@@ -95,19 +95,16 @@ jobs:
       - uses: "lukka/run-vcpkg@v11.5"
         with:
           doNotUpdateVcpkg: 'true'  # Use the checked out vcpkg version
-          runVcpkgInstall: 'true'  # Avoid mixing it with the cmake configure which can be confused with CMAKE_SYSTEM_* variables
-        env:
-          VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
-          VCPKG_BUILD_TYPE: "${{ matrix.target-type }}"  # Optional?
       - uses: "lukka/run-cmake@v10.8"
         with:
           configurePreset: "vcpkg-ninja"
-          configurePresetAdditionalArgs: > # TODO: Set these appropriately...
-            ['-DCMAKE_SYSTEM_NAME=${{ matrix.target.platform }}',
+          configurePresetAdditionalArgs: >
+            ['-DVCPKG_DEFAULT_TRIPLET=${{ matrix.target.vcpkg_triplet }}',
+            '-DVCPKG_OVERLAY_TRIPLETS=${{ matrix.target.vcpkg_triplet }}',
+            '-DCMAKE_SYSTEM_NAME=${{ matrix.target.platform }}',
             '-DCMAKE_SYSTEM_PROCESSOR=${{ matrix.target.arch }}',
             '-DCMAKE_BUILD_TYPE=${{ matrix.target-type }}',
             '-DGODOTCPP_PRECISION=${{ matrix.float-precision }}',
-            '-DVCPKG_TARGET_TRIPLET=${{ matrix.target.vcpkg_triplet }}',
             ${{ env.cmake_extra_args }}]
           buildPreset: "vcpkg-ninja"
       # </Install and build>
@@ -116,7 +113,7 @@ jobs:
       - uses: "actions/cache/save@v4"
         if: "always()"
         with:
-          key: "${{ steps.scons-cache.outputs.cache-primary-key }}"
+          key: "${{ steps.build-cache.outputs.cache-primary-key }}"
           path: "build"
       - uses: "actions/cache/save@v4"
         if: "always()"
@@ -133,7 +130,7 @@ jobs:
       - uses: "actions/upload-artifact@v4"
         with: # Build artifacts useful for debugging in a local environment
           name: "build-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
-          path: ".scons-cache/\n.vcpkg-cache\n./vcpkg/"
+          path: "build/\n.vcpkg-cache\n./vcpkg/"
       # </Export artifacts>
   merge:
     runs-on: "ubuntu-24.04"
