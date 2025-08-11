@@ -1,4 +1,4 @@
-include("triplets/community/arm64-mingw-static.cmake")
+include("triplets/community/arm64-linux.cmake")
 
 # CUSTOM:
 if(PORT STREQUAL "libpng")
