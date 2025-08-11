@@ -75,6 +75,7 @@ jobs:
         with:
           key: "build-${{ matrix.target.cmake_sys_name }}-${{ matrix.target.cmake_sys_proc }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
           path: "build"
+          lookup-only: 'true'  # Debug clean build
       - uses: "actions/cache/restore@v4"
         id: "vcpkg-cache"
         with:
@@ -95,6 +96,9 @@ jobs:
       - uses: "lukka/run-vcpkg@v11.5"
         with:
           doNotUpdateVcpkg: 'true'  # Use the checked out vcpkg version
+        env:
+          VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
+          VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
       - uses: "lukka/run-cmake@v10.8"
         with:
           configurePreset: "vcpkg-ninja"
@@ -107,6 +111,7 @@ jobs:
           buildPreset: "vcpkg-ninja"
         env:
           VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
+          VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
           VCPKG_BINARY_SOURCES: ""  # Disable run-vcpkg's default binary sources, since we use our own cache
       # </Install and build>
