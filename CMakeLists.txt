@@ -7,8 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 project(OpenCASCADE.gd CXX)
 
 # Godot C++ bindings
-add_subdirectory(godot-cpp)
-set(GODOTCPP_DISABLE_EXCEPTIONS OFF)  # Required for OpenCASCADE
+set(GODOTCPP_DISABLE_EXCEPTIONS OFF)  # OpenCASCADE requires exceptions
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp")
 
 # Dependencies
 find_package(OpenCASCADE REQUIRED)

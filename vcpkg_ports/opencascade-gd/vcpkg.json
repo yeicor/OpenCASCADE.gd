@@ -1,0 +1,13 @@
+{
+  "name": "opencascade-gd",
+  "version": "0.0.1",
+  "dependencies": [
+    {
+      "name": "opencascade",
+      "features": [
+        "freetype",
+        "rapidjson"
+      ]
+    }
+  ]
+}

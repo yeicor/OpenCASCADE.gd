@@ -15,21 +15,21 @@ jobs:
       matrix:
         target:
           [ # https://docs.godotengine.org/en/stable/about/system_requirements.html
-            { cmake_sys_name: "Linux", cmake_sys_proc: "x86-64", os: "ubuntu-24.04", vcpkg_triplet: "x64-linux" },
+            { cmake_sys_name: "Linux", cmake_sys_proc: "x86_64", os: "ubuntu-24.04", vcpkg_triplet: "x64-linux" },
             { cmake_sys_name: "Linux", cmake_sys_proc: "x86", os: "ubuntu-24.04", vcpkg_triplet: "x86-linux" },
-            { cmake_sys_name: "Linux", cmake_sys_proc: "armv8", os: "ubuntu-24.04-arm", vcpkg_triplet: "arm64-linux" },
-            { cmake_sys_name: "Linux", cmake_sys_proc: "armv7", os: "ubuntu-24.04-arm", vcpkg_triplet: "arm-linux" },
-            { cmake_sys_name: "Windows", cmake_sys_proc: "x86-64", os: "windows-2025", vcpkg_triplet: "x64-mingw-static" },
+            { cmake_sys_name: "Linux", cmake_sys_proc: "arm64-v8a", os: "ubuntu-24.04-arm", vcpkg_triplet: "arm64-linux" },
+            { cmake_sys_name: "Linux", cmake_sys_proc: "armeabi-v7a", os: "ubuntu-24.04-arm", vcpkg_triplet: "arm-linux" },
+            { cmake_sys_name: "Windows", cmake_sys_proc: "x86_64", os: "windows-2025", vcpkg_triplet: "x64-mingw-static" },
             { cmake_sys_name: "Windows", cmake_sys_proc: "x86", os: "windows-2025", vcpkg_triplet: "x86-mingw-static" },
-            { cmake_sys_name: "Windows", cmake_sys_proc: "armv8", os: "windows-2025", vcpkg_triplet: "arm64-mingw-static" },
-            { cmake_sys_name: "Darwin", cmake_sys_proc: "armv8", os: "macos-15", vcpkg_triplet: "arm64-osx" },
-            { cmake_sys_name: "Darwin", cmake_sys_proc: "x86-64", os: "macos-15", vcpkg_triplet: "x64-osx" },
+            { cmake_sys_name: "Windows", cmake_sys_proc: "arm64-v8a", os: "windows-2025", vcpkg_triplet: "arm64-mingw-static" },
+            { cmake_sys_name: "Darwin", cmake_sys_proc: "arm64-v8a", os: "macos-15", vcpkg_triplet: "arm64-osx" },
+            { cmake_sys_name: "Darwin", cmake_sys_proc: "x86_64", os: "macos-15", vcpkg_triplet: "x64-osx" },
             { cmake_sys_name: "Emscripten", cmake_sys_proc: "wasm32", os: "ubuntu-24.04", vcpkg_triplet: "wasm32-emscripten-pic" },
-            { cmake_sys_name: "Android", cmake_sys_proc: "x86-64", os: "ubuntu-24.04", vcpkg_triplet: "x64-android" },
+            { cmake_sys_name: "Android", cmake_sys_proc: "x86_64", os: "ubuntu-24.04", vcpkg_triplet: "x64-android" },
             { cmake_sys_name: "Android", cmake_sys_proc: "x86", os: "ubuntu-24.04", vcpkg_triplet: "x86-android" },
-            { cmake_sys_name: "Android", cmake_sys_proc: "armv8", os: "ubuntu-24.04", vcpkg_triplet: "arm64-android" },
-            { cmake_sys_name: "Android", cmake_sys_proc: "armv7", os: "ubuntu-24.04", vcpkg_triplet: "arm-android" },
-            { cmake_sys_name: "iOS", cmake_sys_proc: "armv8", os: "macos-15", vcpkg_triplet: "arm64-ios" },
+            { cmake_sys_name: "Android", cmake_sys_proc: "arm64-v8a", os: "ubuntu-24.04", vcpkg_triplet: "arm64-android" },
+            { cmake_sys_name: "Android", cmake_sys_proc: "armeabi-v7a", os: "ubuntu-24.04", vcpkg_triplet: "arm-android" },
+            { cmake_sys_name: "iOS", cmake_sys_proc: "arm64-v8a", os: "macos-15", vcpkg_triplet: "arm64-ios" },
           ]
         target-type: [ "template_debug" ] # TODO: , "template_release"
         float-precision: [ "single" ] # TODO: , "double"
@@ -43,7 +43,7 @@ jobs:
       # <Triplet-specific setup>
       - if: "matrix.target.cmake_sys_name == 'Linux' && matrix.target.cmake_sys_proc == 'x86'"
         run: "sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib"
-      - if: "matrix.target.cmake_sys_name == 'Linux' && matrix.target.cmake_sys_proc == 'armv7'"
+      - if: "matrix.target.cmake_sys_name == 'Linux' && matrix.target.cmake_sys_proc == 'armeabi-v7a'"
         run: "sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf && echo \"cmake_extra_args='-DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc', '-DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++'\" >> $GITHUB_ENV"
       - if: "matrix.target.os == 'ubuntu-24.04' || matrix.target.os == 'ubuntu-24.04-arm'"
         run: "sudo apt-get update && sudo apt-get install -y libx11-dev libgl1-mesa-dev libfontconfig-dev"
@@ -66,7 +66,7 @@ jobs:
           ndk-version: "r23c" # Same as https://github.com/godotengine/godot/blob/<GODOT_VERSION>/platform/android/detect.py
           link-to-sdk: true
       - if: "matrix.target.cmake_sys_name == 'Android'"
-        run: 'echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV'
+        run: "echo \"ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}\" >> $GITHUB_ENV && echo \"cmake_extra_args='-DANDROID_ABI=${{ matrix.target.cmake_sys_proc }}', '-UCMAKE_SYSTEM_PROCESSOR'\"
       # </Triplet-specific setup>
 
       # <Cache restoration>
@@ -75,7 +75,6 @@ jobs:
         with:
           key: "build-${{ matrix.target.cmake_sys_name }}-${{ matrix.target.cmake_sys_proc }}-${{ matrix.float-precision }}-${{ matrix.target-type }}"
           path: "build"
-          lookup-only: 'true'  # Debug clean build
       - uses: "actions/cache/restore@v4"
         id: "vcpkg-cache"
         with:
@@ -91,7 +90,6 @@ jobs:
           binaryCachePath: '.vcpkg-cache'
         env:
           VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
-          VCPKG_BINARY_SOURCES: ""
       - uses: "lukka/run-cmake@v10.8"
         with:
           configurePreset: "vcpkg-ninja"
@@ -101,11 +99,11 @@ jobs:
             '-DCMAKE_BUILD_TYPE=${{ matrix.target-type }}',
             '-DVCPKG_TARGET_TRIPLET=${{ matrix.target.vcpkg_triplet }}',
             '-DGODOTCPP_PRECISION=${{ matrix.float-precision }}',
-            '-DGODOTCPP_DISABLE_EXCEPTIONS=OFF',
             ${{ env.cmake_extra_args }}]
           buildPreset: "vcpkg-ninja"
         env:
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
+          VCPKG_BINARY_SOURCES: "" # Avoid deprecation warning (due to lukka/run-vcpkg)
       # </Install and build>
 
       # <Cache saving (always)>
