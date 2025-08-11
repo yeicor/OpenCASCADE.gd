@@ -75,7 +75,8 @@ jobs:
         with:
           key: "vcpkg-${{ matrix.target.vcpkg_triplet }}"  # Others don't matter for vcpkg
           path: ".vcpkg-cache"
-      - run: "[ -d .vcpkg-cache ] || mkdir .vcpkg-cache"
+      - shell: "bash"
+        run: "[ -d .vcpkg-cache ] || mkdir .vcpkg-cache"
       # </Cache restoration>
 
       # <Install and build>
@@ -89,7 +90,7 @@ jobs:
           ${{ env.cmake_extra_args }}" >> $GITHUB_ENV
       - uses: "lukka/run-vcpkg@v11.5"
         with:
-          vcpkgJsonIgnores: "['**/vcpkg*/**/vcpkg.json']"
+          vcpkgJsonGlob: '**/vcpkg-ci.json'
           doNotUpdateVcpkg: 'true'  # Use the checked out vcpkg version
           binaryCachePath: '.vcpkg-cache'
           runVcpkgInstall: 'true'

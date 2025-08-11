@@ -1,0 +1,9 @@
+{
+  "name": "opencascade-gd-outer",
+  "version": "0.0.1",
+  "dependencies": [
+    {
+      "name": "opencascade-gd"
+    }
+  ]
+}

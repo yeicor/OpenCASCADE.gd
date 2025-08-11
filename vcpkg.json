@@ -1,9 +1,13 @@
 {
-  "name": "opencascade-gd-outer",
+  "name": "opencascade-gd",
   "version": "0.0.1",
   "dependencies": [
     {
-      "name": "opencascade-gd"
+      "name": "opencascade",
+      "features": [
+        "freetype",
+        "rapidjson"
+      ]
     }
   ]
 }
