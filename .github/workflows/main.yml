@@ -96,6 +96,7 @@ jobs:
       - uses: "lukka/run-vcpkg@v11.5"
         with:
           doNotUpdateVcpkg: 'true'  # Use the checked out vcpkg version
+          runVcpkgInstall: 'true'  # Attempt to fix vcpkg_triplet issues (should not be needed)
         env:
           VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
