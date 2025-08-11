@@ -99,12 +99,12 @@ jobs:
             ['-DCMAKE_SYSTEM_NAME=${{ matrix.target.cmake_sys_name }}',
             '-DCMAKE_SYSTEM_PROCESSOR=${{ matrix.target.cmake_sys_proc }}',
             '-DCMAKE_BUILD_TYPE=${{ matrix.target-type }}',
+            '-DVCPKG_TARGET_TRIPLET=${{ matrix.target.vcpkg_triplet }}',
             '-DGODOTCPP_PRECISION=${{ matrix.float-precision }}',
             '-DGODOTCPP_DISABLE_EXCEPTIONS=OFF',
             ${{ env.cmake_extra_args }}]
           buildPreset: "vcpkg-ninja"
         env:
-          VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
       # </Install and build>
 
