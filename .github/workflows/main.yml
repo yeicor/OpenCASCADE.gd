@@ -98,12 +98,12 @@ jobs:
         with:
           configurePreset: "vcpkg-ninja"
           configurePresetAdditionalArgs: > # TODO: Set these appropriately...
-            -DCMAKE_SYSTEM_NAME=${{ matrix.target.platform }}
-            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.target.arch }}
-            -DCMAKE_BUILD_TYPE=${{ matrix.target-type }}
-            -DGODOTCPP_PRECISION=${{ matrix.float-precision }}
-            -DVCPKG_TARGET_TRIPLET=${{ matrix.target.vcpkg_triplet }}
-            ${{ env.cmake_extra_args }}
+            ['-DCMAKE_SYSTEM_NAME=${{ matrix.target.platform }}',
+            '-DCMAKE_SYSTEM_PROCESSOR=${{ matrix.target.arch }}',
+            '-DCMAKE_BUILD_TYPE=${{ matrix.target-type }}',
+            '-DGODOTCPP_PRECISION=${{ matrix.float-precision }}',
+            '-DVCPKG_TARGET_TRIPLET=${{ matrix.target.vcpkg_triplet }}',
+            '${{ env.cmake_extra_args }}']
           buildPreset: "vcpkg-ninja"
       # </Install and build>
 
