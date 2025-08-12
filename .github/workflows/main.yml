@@ -77,7 +77,7 @@ jobs:
         run: |
           set -ex
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
-          last_workflow_id=$(gh run list --workflow="${{ github.workflow }}" --branch="${{ github.ref_name }}" --json databaseId --limit 1 --jq '.[0].databaseId')
+          last_workflow_id=$(gh run list --workflow="${{ github.workflow }}" --branch="${{ github.ref_name }}" --status=completed --json databaseId --limit 1 --jq '.[0].databaseId')
           gh run download "$last_workflow_id" --name "build-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}" || \
           echo "::warning ::Failed to download and extract previous build artifacts, skipping cache..."
           # Create a cache directory for vcpkg binary sources
@@ -96,10 +96,11 @@ jobs:
           -DGODOTCPP_TARGET=${{ matrix.target.target-type }} \
           -DGODOTCPP_PRECISION=${{ matrix.target.float_precision }} \
           ${{ env.cmake_extra_args }}" >> $GITHUB_ENV
-          "$VCPKG_ROOT/bootstrap-vcpkg${{matrix.target.os == 'windows-2025' && '.bat' || '.sh'}}" --disableMetrics
+          "$VCPKG_ROOT/bootstrap-vcpkg${{matrix.target.os == 'windows-2025' && '.bat' || '.sh'}}"
           "$VCPKG_ROOT/vcpkg${{matrix.target.os == 'windows-2025' && '.exe' || ''}}" install opencascade-gd --classic
         env:
           VCPKG_ROOT: "vcpkg"
+          VCPKG_DISABLE_METRICS: "1"
           VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
           VCPKG_OVERLAY_PORTS: "vcpkg_ports"
