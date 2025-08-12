@@ -91,7 +91,8 @@ jobs:
       # </Use previous build artifacts as a cache>
 
       # <Install and build>
-      - run: | # HACK: Customize the vcpkg install of the main repo package with custom CMAKE_ARGS
+      - shell: "bash"
+        run: | # HACK: Customize the vcpkg install of the main repo package with custom CMAKE_ARGS
           echo "__OPENCASCADE_GD_CMAKE_ARGS=\
           -DGODOTCPP_TARGET=${{ matrix.target.target-type }} \
           -DGODOTCPP_PRECISION=${{ matrix.target.float_precision }} \
