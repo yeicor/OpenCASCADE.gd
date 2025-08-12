@@ -1,19 +1,21 @@
 cmake_minimum_required(VERSION 3.10)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(OpenCASCADE.gd CXX)
 
-## FIXME: No-op when CMAKE_BUILD_TYPE does not match the GODOTCPP_BUILD_TYPE
-#if (CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT GODOTCPP_BUILD_TYPE STREQUAL "template_release")
-#    message(WARNING "CMAKE_BUILD_TYPE is 'Release' but GODOTCPP_BUILD_TYPE is not 'template_release'. Ignoring this build to speed up the build process.")
+## FIXME: No-op when CMAKE_BUILD_TYPE does not match the GODOTCPP_TARGET
+#if (CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT GODOTCPP_TARGET STREQUAL "template_release")
+#    message(WARNING "CMAKE_BUILD_TYPE is 'Release' but GODOTCPP_TARGET is not 'template_release'. Ignoring this build to speed up the build process.")
 #    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json") # No-op installation
 #    return()
-#elseif (CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT GODOTCPP_BUILD_TYPE STREQUAL "template_debug")
-#    message(WARNING "CMAKE_BUILD_TYPE is 'Debug' but GODOTCPP_BUILD_TYPE is not 'template_debug'. Ignoring this build to speed up the build process.")
+#elseif (CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT GODOTCPP_TARGET STREQUAL "template_debug")
+#    message(WARNING "CMAKE_BUILD_TYPE is 'Debug' but GODOTCPP_TARGET is not 'template_debug'. Ignoring this build to speed up the build process.")
 #    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json") # No-op installation
 #    return()
 #elseif (NOT CMAKE_BUILD_TYPE)
 #    message(FATAL_ERROR "CMAKE_BUILD_TYPE is not set. Please set it to 'Release' or 'Debug'.")
-#elseif (NOT GODOTCPP_BUILD_TYPE)
-#    message(FATAL_ERROR "GODOTCPP_BUILD_TYPE is not set. Please set it to 'template_release' or 'template_debug'.")
+#elseif (NOT GODOTCPP_TARGET)
+#    message(FATAL_ERROR "GODOTCPP_TARGET is not set. Please set it to 'template_release' or 'template_debug'.")
 #endif ()
 
 # Godot C++ bindings

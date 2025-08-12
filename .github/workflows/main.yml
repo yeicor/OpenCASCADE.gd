@@ -52,6 +52,8 @@ jobs:
         uses: "egor-tensin/setup-mingw@v2"
         with:
           version: "12.2.0" # It seems like newer versions are broken (follow godot-cpp)
+      - if: "matrix.target.os == 'windows-2025'"
+        run: "echo 'LDFLAGS=-Wl,-allow-multiple-definition' >> $GITHUB_ENV"
       - if: "matrix.target.os == 'macos-15'"
         run: "brew install autoconf automake autoconf-archive"
       - if: "matrix.target.vcpkg_triplet == 'wasm32-emscripten-pic'"
@@ -102,7 +104,7 @@ jobs:
           runVcpkgInstall: 'true'
           runVcpkgFormatString: '[`install`, `opencascade-gd`, `--classic`]'
         env:
-          VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}" # This is the target triplet for the vcpkg install
+          VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
           VCPKG_OVERLAY_PORTS: "vcpkg_ports"
           VCPKG_INSTALLED_DIR: "vcpkg/installed"
