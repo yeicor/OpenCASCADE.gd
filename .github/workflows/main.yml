@@ -72,14 +72,14 @@ jobs:
         run: "echo \"ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}\" >> $GITHUB_ENV"  # && echo \"cmake_extra_args='-DANDROID_ABI=${{ matrix.target.cmake_sys_proc }}', '-UCMAKE_SYSTEM_PROCESSOR'\"
       # </Triplet-specific setup>
 
-      # <Cache restoration>
-      - uses: "actions/cache/restore@v4"
-        id: "vcpkg-cache"
-        with:
-          key: "vcpkg-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
-          path: ".vcpkg-cache"
+      # <Use previous build artifacts as a cache (hack to have more storage space, for up to 90 days)>
       - shell: "bash"
         run: |
+          set -ex
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          last_workflow_id=$(gh run list --workflow="${{ github.workflow }}" --branch="${{ github.ref_name }}" --json databaseId --limit 1 --jq '.[0].databaseId')
+          gh run download "$last_workflow_id" --name "build-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}" # Also extracts the zip!
+          # Create a cache directory for vcpkg binary sources
           [ -d .vcpkg-cache ] || mkdir .vcpkg-cache
           abs_path=$(realpath .vcpkg-cache)
           # Check if WSL environment (wslpath expects /mnt/c/ style paths)
@@ -87,38 +87,22 @@ jobs:
             abs_path=$(echo "$abs_path" | sed -E 's#^/([a-z])/#\U\1:\\#I; s#/#\\#g')
           fi
           echo "VCPKG_BINARY_SOURCES=clear;files,${abs_path},readwrite" >> $GITHUB_ENV
-      # </Cache restoration>
+      # </Use previous build artifacts as a cache>
 
       # <Install and build>
-      - uses: "lukka/get-cmake@v4.1.0"
       - run: | # HACK: Customize the vcpkg install of the main repo package with custom CMAKE_ARGS
           echo "__OPENCASCADE_GD_CMAKE_ARGS=\
           -DGODOTCPP_TARGET=${{ matrix.target.target-type }} \
           -DGODOTCPP_PRECISION=${{ matrix.target.float_precision }} \
           ${{ env.cmake_extra_args }}" >> $GITHUB_ENV
-      - uses: "lukka/run-vcpkg@v11.5"
-        with:
-          vcpkgJsonGlob: '**/vcpkg-ci.json'
-          doNotUpdateVcpkg: 'true'  # Use the checked out vcpkg version
-          binaryCachePath: '.vcpkg-cache'
-          runVcpkgInstall: 'true'
-          runVcpkgFormatString: '[`install`, `opencascade-gd`, `--classic`]'
+          vcpkg/bootstrap-vcpkg${{matrix.target.os == 'windows-2025' ? '.bat' : '.sh'}} --disableMetrics
+          vcpkg/vcpkg${{matrix.target.os == 'windows-2025' ? '.exe' : ''}} install opencascade-gd --classic
         env:
           VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
           VCPKG_OVERLAY_PORTS: "vcpkg_ports"
-          VCPKG_INSTALLED_DIR: "vcpkg/installed"
           VCPKG_DISABLE_METRICS: "1" # Avoid deprecation warning (due to lukka/run-vcpkg)
       # </Install and build>
-
-      # <Cache saving (always)>
-      - run: "find .vcpkg-cache -type f"  # Debugging: list files in the cache
-      - uses: "actions/cache/save@v4"
-        if: "always()"
-        with:
-          key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
-          path: ".vcpkg-cache"
-      # </Cache saving (always)>
 
       # <Export artifacts>
       - uses: "actions/upload-artifact@v4"
