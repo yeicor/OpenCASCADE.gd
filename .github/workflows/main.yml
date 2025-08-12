@@ -78,7 +78,8 @@ jobs:
           set -ex
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
           last_workflow_id=$(gh run list --workflow="${{ github.workflow }}" --branch="${{ github.ref_name }}" --json databaseId --limit 1 --jq '.[0].databaseId')
-          gh run download "$last_workflow_id" --name "build-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}" # Also extracts the zip!
+          gh run download "$last_workflow_id" --name "build-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}" || \
+          echo "::warning ::Failed to download and extract previous build artifacts, skipping cache..."
           # Create a cache directory for vcpkg binary sources
           [ -d .vcpkg-cache ] || mkdir .vcpkg-cache
           abs_path=$(realpath .vcpkg-cache)
@@ -95,13 +96,13 @@ jobs:
           -DGODOTCPP_TARGET=${{ matrix.target.target-type }} \
           -DGODOTCPP_PRECISION=${{ matrix.target.float_precision }} \
           ${{ env.cmake_extra_args }}" >> $GITHUB_ENV
-          vcpkg/bootstrap-vcpkg${{matrix.target.os == 'windows-2025' && '.bat' || '.sh'}} --disableMetrics
-          vcpkg/vcpkg${{matrix.target.os == 'windows-2025' && '.exe' || ''}} install opencascade-gd --classic
+          "$VCPKG_ROOT/bootstrap-vcpkg${{matrix.target.os == 'windows-2025' && '.bat' || '.sh'}}" --disableMetrics
+          "$VCPKG_ROOT/vcpkg${{matrix.target.os == 'windows-2025' && '.exe' || ''}}" install opencascade-gd --classic
         env:
+          VCPKG_ROOT: "vcpkg"
           VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
           VCPKG_OVERLAY_PORTS: "vcpkg_ports"
-          VCPKG_DISABLE_METRICS: "1" # Avoid deprecation warning (due to lukka/run-vcpkg)
       # </Install and build>
 
       # <Export artifacts>
@@ -112,7 +113,7 @@ jobs:
       - uses: "actions/upload-artifact@v4"
         with: # Build artifacts useful for debugging in a local environment
           name: "build-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
-          path: ".vcpkg-cache\n./vcpkg/"
+          path: ".vcpkg-cache\n./vcpkg/installed/"
       # </Export artifacts>
   merge:
     runs-on: "ubuntu-24.04"
