@@ -1,17 +1,21 @@
 # HACK: Copy the source files from the current repository to the buildtree (instead of using a clean repo reference).
 set(FROM "${CURRENT_PORT_DIR}/../..")
 set(TO "${CURRENT_BUILDTREES_DIR}/src/workspace")
-set(REPOS "." "godot-cpp")
+set(REPOS "/" "/godot-cpp")
 foreach(REPO IN LISTS REPOS)
-    file(MAKE_DIRECTORY "${TO}/${REPO}")
+    file(MAKE_DIRECTORY "${TO}${REPO}")
+    message(STATUS "Copying sources from ${FROM}${REPO} to ${TO}${REPO}")
     execute_process(
-        COMMAND git -C "${FROM}/${REPO}" archive --format=tar HEAD
-        COMMAND tar -x -C "${TO}/${REPO}"
-        WORKING_DIRECTORY "${FROM}/${REPO}"
+        COMMAND bash -c "git ls-files -z | xargs -0 -I{} rsync -R '{}' '${TO}${REPO}/'"
+        WORKING_DIRECTORY "${FROM}${REPO}"
         RESULT_VARIABLE COPY_RESULT
     )
     if(NOT COPY_RESULT EQUAL 0)
         message(FATAL_ERROR "Failed to copy sources from ${FROM} to ${TO}")
+    endif()
+    if(NOT EXISTS "${TO}${REPO}/CMakeLists.txt")
+        file(GLOB MY_FILES "${TO}${REPO}*")
+        message(FATAL_ERROR "Missing CMakeLists.txt in ${TO}${REPO}. Found files at root: ${MY_FILES}")
     endif()
 endforeach()
 message(STATUS "Copied sources from ${FROM} to ${TO} respecting .gitignore")
@@ -38,7 +42,7 @@ vcpkg_install_copyright(FILE_LIST "${TO}/LICENSE")
 
 set(VCPKG_POLICY_EMPTY_INCLUDE_FOLDER enabled)
 
-# Write a timestamp file to this port directory to always rebuild it (using the updated local files)
+# Write a timestamp file to this port directory to always rebuild it (needs a remove anyway, but avoids using the binary cache)
 string(TIMESTAMP CURRENT_TIME UTC)
 file(WRITE "${CURRENT_PORT_DIR}/.last_build" "${CURRENT_TIME}\n")
 message(STATUS "Wrote timestamp to ${CURRENT_PORT_DIR}/.last_build")
