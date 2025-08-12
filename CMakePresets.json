@@ -3,17 +3,41 @@
   "configurePresets": [
     {
       "name": "vcpkg-ninja",
+      "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "vcpkg/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "vcpkg-ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "GODOTCPP_TARGET": "template_debug"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "vcpkg-ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "GODOTCPP_TARGET": "template_release"
       }
     }
   ],
   "buildPresets": [
     {
-      "name": "vcpkg-ninja",
-      "configurePreset": "vcpkg-ninja",
+      "name": "debug",
+      "configurePreset": "debug",
+      "targets": [
+        "install"
+      ]
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
       "targets": [
         "install"
       ]

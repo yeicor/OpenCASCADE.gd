@@ -1,4 +1,4 @@
-#include "step_and_brep_importer.h"
+#include "step_iges_brep_importer.h"
 #include <gdextension_interface.h>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/defs.hpp>
@@ -8,7 +8,7 @@ using namespace godot;
 
 void initialize_gdextension_types([[maybe_unused]] ModuleInitializationLevel p_level) {
     if (p_level < MODULE_INITIALIZATION_LEVEL_SCENE) return; // Only initialize at the SCENE level or higher.
-    GDREGISTER_CLASS(StepAndBRepImporter);
+    GDREGISTER_CLASS(StepIgesBRepImporter);
 }
 
 void uninitialize_gdextension_types([[maybe_unused]] ModuleInitializationLevel p_level) {

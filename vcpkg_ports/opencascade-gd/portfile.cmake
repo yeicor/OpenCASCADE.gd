@@ -2,11 +2,17 @@
 set(FROM "${CURRENT_PORT_DIR}/../..")
 set(TO "${CURRENT_BUILDTREES_DIR}/src/workspace")
 set(REPOS "/" "/godot-cpp")
+set(GIT_BASH_PATH "C:/Program Files/Git/bin/bash.exe")
+if(CMAKE_HOST_WIN32 AND EXISTS "${GIT_BASH_PATH}")
+    set(BASH_EXECUTABLE "${GIT_BASH_PATH}")
+else()
+    find_program(BASH_EXECUTABLE bash)
+endif()
 foreach(REPO IN LISTS REPOS)
     file(MAKE_DIRECTORY "${TO}${REPO}")
     message(STATUS "Copying sources from ${FROM}${REPO} to ${TO}${REPO}")
     execute_process(
-        COMMAND bash -c "git ls-files -z | xargs -0 -I{} rsync -R '{}' '${TO}${REPO}/'"
+        COMMAND ${BASH_EXECUTABLE} -c "git ls-files -z | xargs -0 -I{} rsync -R '{}' '${TO}${REPO}/'"
         WORKING_DIRECTORY "${FROM}${REPO}"
         RESULT_VARIABLE COPY_RESULT
     )

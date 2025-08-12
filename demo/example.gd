@@ -2,4 +2,5 @@ extends Node
 
 
 func _ready() -> void:
-	var example = StepAndBRepImporter.new()
+	var example = StepIgesBRepImporter.new()
+	example.import(ProjectSettings.globalize_path("res://example.stp"))
