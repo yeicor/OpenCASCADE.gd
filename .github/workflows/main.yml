@@ -95,8 +95,8 @@ jobs:
           -DGODOTCPP_TARGET=${{ matrix.target.target-type }} \
           -DGODOTCPP_PRECISION=${{ matrix.target.float_precision }} \
           ${{ env.cmake_extra_args }}" >> $GITHUB_ENV
-          vcpkg/bootstrap-vcpkg${{matrix.target.os == 'windows-2025' ? '.bat' : '.sh'}} --disableMetrics
-          vcpkg/vcpkg${{matrix.target.os == 'windows-2025' ? '.exe' : ''}} install opencascade-gd --classic
+          vcpkg/bootstrap-vcpkg${{matrix.target.os == 'windows-2025' && '.bat' || '.sh'}} --disableMetrics
+          vcpkg/vcpkg${{matrix.target.os == 'windows-2025' && '.exe' || ''}} install opencascade-gd --classic
         env:
           VCPKG_TARGET_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
