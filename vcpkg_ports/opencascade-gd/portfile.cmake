@@ -1,9 +1,9 @@
 # HACK: Copy the source files from the current repository to the buildtree (instead of using a clean repo reference).
 set(FROM "${CURRENT_PORT_DIR}/../..")
 set(TO "${CURRENT_BUILDTREES_DIR}/src/workspace")
-file(MAKE_DIRECTORY "${TO}")
 set(REPOS "." "godot-cpp")
 foreach(REPO IN LISTS REPOS)
+    file(MAKE_DIRECTORY "${TO}/${REPO}")
     execute_process(
         COMMAND git -C "${FROM}/${REPO}" archive --format=tar HEAD
         COMMAND tar -x -C "${TO}/${REPO}"
