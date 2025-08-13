@@ -5,13 +5,16 @@ get_filename_component(FROM "${FROM}" DIRECTORY)
 set(TO "${CURRENT_BUILDTREES_DIR}/src/workspace")
 file(REMOVE_RECURSE "${TO}")
 set(REPOS "/" "/godot-cpp/")
+find_program(GIT_EXECUTABLE git)
+if(NOT GIT_EXECUTABLE)
+    message(FATAL_ERROR "Git executable not found. Please install Git and ensure it is in your PATH.")
+endif()
 foreach(REPO IN LISTS REPOS)
     file(MAKE_DIRECTORY "${TO}${REPO}")
     message(STATUS "Copying sources from ${FROM}${REPO} to ${TO}${REPO}")
-    file(TO_NATIVE_PATH "${FROM}${REPO}" FROM_REPO_NATIVE)
     execute_process(
-        COMMAND git ls-files
-        WORKING_DIRECTORY "${FROM_REPO_NATIVE}"
+        COMMAND ${GIT_EXECUTABLE} ls-files
+        WORKING_DIRECTORY "${FROM}${REPO}"
         OUTPUT_VARIABLE REPO_FILES
         ERROR_VARIABLE REPO_FILES_ERROR
         RESULT_VARIABLE LS_RESULT
