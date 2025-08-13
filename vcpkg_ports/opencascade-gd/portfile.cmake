@@ -1,27 +1,42 @@
 # HACK: Copy the source files from the current repository to the buildtree (instead of using a clean repo reference).
 set(FROM "${CURRENT_PORT_DIR}/../..")
 set(TO "${CURRENT_BUILDTREES_DIR}/src/workspace")
-set(REPOS "/" "/godot-cpp")
-set(GIT_BASH_PATH "C:/Program Files/Git/bin/bash.exe")
-if(CMAKE_HOST_WIN32 AND EXISTS "${GIT_BASH_PATH}")
-    set(BASH_EXECUTABLE "${GIT_BASH_PATH}")
-else()
-    find_program(BASH_EXECUTABLE bash)
-endif()
+file(REMOVE_RECURSE "${TO}")
+set(REPOS "/" "/godot-cpp/")
 foreach(REPO IN LISTS REPOS)
     file(MAKE_DIRECTORY "${TO}${REPO}")
     message(STATUS "Copying sources from ${FROM}${REPO} to ${TO}${REPO}")
     execute_process(
-        COMMAND ${BASH_EXECUTABLE} -c "git ls-files -z | xargs -0 -I{} rsync -R '{}' '${TO}${REPO}/'"
+        COMMAND git ls-files
         WORKING_DIRECTORY "${FROM}${REPO}"
-        RESULT_VARIABLE COPY_RESULT
+        OUTPUT_VARIABLE REPO_FILES
+        RESULT_VARIABLE LS_RESULT
     )
-    if(NOT COPY_RESULT EQUAL 0)
-        message(FATAL_ERROR "Failed to copy sources from ${FROM} to ${TO}")
+    if(NOT LS_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to list files in ${FROM}${REPO}")
     endif()
-    if(NOT EXISTS "${TO}${REPO}/CMakeLists.txt")
+    string(REPLACE "\n" ";" REPO_FILES_LIST "${REPO_FILES}")
+    foreach(FILE IN LISTS REPO_FILES_LIST)
+        if (NOT FILE)
+            continue() # Skip empty lines
+        endif()
+        message(STATUS "Copying file ${FILE} for ${REPO}")
+        if (NOT EXISTS "${FROM}${REPO}${FILE}")
+            message(WARNING "File ${FROM}${REPO}${FILE} does not exist, skipping.")
+            continue() # Skip files that do not exist
+        endif()
+        if (IS_DIRECTORY "${FROM}${REPO}${FILE}")
+            message(WARNING "File ${FROM}${REPO}${FILE} is a directory, skipping.")
+            continue() # Skip files that do not exist
+        endif()
+        get_filename_component(DIR "${FILE}" DIRECTORY)
+        message(STATUS "Creating directory ${TO}${REPO}${DIR} for file ${FILE}")
+        file(MAKE_DIRECTORY "${TO}${REPO}${DIR}")
+        file(COPY "${FROM}${REPO}${FILE}" DESTINATION "${TO}${REPO}${DIR}")
+    endforeach()
+    if(NOT EXISTS "${TO}${REPO}CMakeLists.txt")
         file(GLOB MY_FILES "${TO}${REPO}*")
-        message(FATAL_ERROR "Missing CMakeLists.txt in ${TO}${REPO}. Found files at root: ${MY_FILES}")
+        message(FATAL_ERROR "Missing CMakeLists.txt in ${TO}${REPO} Found files at root: ${MY_FILES}")
     endif()
 endforeach()
 message(STATUS "Copied sources from ${FROM} to ${TO} respecting .gitignore")
