@@ -1,5 +1,7 @@
 # HACK: Copy the source files from the current repository to the buildtree (instead of using a clean repo reference).
-set(FROM "${CURRENT_PORT_DIR}/../..")
+set(FROM "${CURRENT_PORT_DIR}") # /../..
+get_filename_component(FROM "${FROM}" DIRECTORY)
+get_filename_component(FROM "${FROM}" DIRECTORY)
 set(TO "${CURRENT_BUILDTREES_DIR}/src/workspace")
 file(REMOVE_RECURSE "${TO}")
 set(REPOS "/" "/godot-cpp/")
