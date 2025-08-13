@@ -87,6 +87,7 @@ jobs:
         run: | # HACK: Customize the vcpkg install of the main repo package with custom CMAKE_ARGS
           export __OPENCASCADE_GD_CMAKE_ARGS="-DGODOTCPP_TARGET=${{ matrix.target-type }} -DGODOTCPP_PRECISION=${{ matrix.float-precision }} ${{ env.cmake_extra_args }}"
           "$VCPKG_ROOT/bootstrap-vcpkg${{matrix.target.os == 'windows-2025' && '.bat' || '.sh'}}"
+          "$VCPKG_ROOT/vcpkg${{matrix.target.os == 'windows-2025' && '.exe' || ''}}" install opencascade --classic  # Helps caching even on failure?
           "$VCPKG_ROOT/vcpkg${{matrix.target.os == 'windows-2025' && '.exe' || ''}}" remove opencascade-gd --classic || true  # Avoid caching too much
           "$VCPKG_ROOT/vcpkg${{matrix.target.os == 'windows-2025' && '.exe' || ''}}" install opencascade-gd --classic
         env:

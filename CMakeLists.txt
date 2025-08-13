@@ -39,9 +39,11 @@ target_link_libraries(${PROJECT_NAME}_importer PRIVATE godot-cpp ${OpenCASCADE_L
 
 # Define the shared library target
 file(GLOB_RECURSE SOURCES "src/gen_bindings/*.cpp")
-add_library(${PROJECT_NAME}_bindings SHARED ${SOURCES})
-target_include_directories(${PROJECT_NAME}_bindings PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_bindings PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
+if(SOURCES) # TODO: automate generating them during build
+    add_library(${PROJECT_NAME}_bindings SHARED ${SOURCES})
+    target_include_directories(${PROJECT_NAME}_bindings PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME}_bindings PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
+endif()
 
 # Install the complete bindings to the demo project with the correct suffix
 get_target_property(GODOTCPP_SUFFIX godot-cpp GODOTCPP_SUFFIX)
