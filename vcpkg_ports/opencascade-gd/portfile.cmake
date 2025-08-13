@@ -10,10 +10,11 @@ foreach(REPO IN LISTS REPOS)
         COMMAND git ls-files
         WORKING_DIRECTORY "${FROM}${REPO}"
         OUTPUT_VARIABLE REPO_FILES
+        ERROR_VARIABLE REPO_FILES_ERROR
         RESULT_VARIABLE LS_RESULT
     )
     if(NOT LS_RESULT EQUAL 0)
-        message(FATAL_ERROR "Failed to list files in ${FROM}${REPO}")
+        message(FATAL_ERROR "Failed to list files in ${FROM}${REPO}: ${REPO_FILES_ERROR}")
     endif()
     string(REPLACE "\n" ";" REPO_FILES_LIST "${REPO_FILES}")
     foreach(FILE IN LISTS REPO_FILES_LIST)
