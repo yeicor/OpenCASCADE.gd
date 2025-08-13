@@ -6,9 +6,10 @@ set(REPOS "/" "/godot-cpp/")
 foreach(REPO IN LISTS REPOS)
     file(MAKE_DIRECTORY "${TO}${REPO}")
     message(STATUS "Copying sources from ${FROM}${REPO} to ${TO}${REPO}")
+    file(TO_NATIVE_PATH "${FROM}${REPO}" FROM_REPO_NATIVE)
     execute_process(
         COMMAND git ls-files
-        WORKING_DIRECTORY "${FROM}${REPO}"
+        WORKING_DIRECTORY "${FROM_REPO_NATIVE}"
         OUTPUT_VARIABLE REPO_FILES
         ERROR_VARIABLE REPO_FILES_ERROR
         RESULT_VARIABLE LS_RESULT
