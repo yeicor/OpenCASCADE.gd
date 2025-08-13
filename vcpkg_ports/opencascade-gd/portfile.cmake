@@ -13,12 +13,12 @@ if(NOT GIT_EXECUTABLE)
     else()
         message(FATAL_ERROR "Git executable not found. Please install Git and ensure it is in your PATH.")
     endif()
-endif()
+    endif()
 foreach(REPO IN LISTS REPOS)
     file(MAKE_DIRECTORY "${TO}${REPO}")
     message(STATUS "Copying sources from ${FROM}${REPO} to ${TO}${REPO}")
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} ls-files
+        COMMAND GIT_EXECUTABLE}git ls-files
         WORKING_DIRECTORY "${FROM}${REPO}"
         OUTPUT_VARIABLE REPO_FILES
         ERROR_VARIABLE REPO_FILES_ERROR
@@ -32,7 +32,6 @@ foreach(REPO IN LISTS REPOS)
         if (NOT FILE)
             continue() # Skip empty lines
         endif()
-        message(STATUS "Copying file ${FILE} for ${REPO}")
         if (NOT EXISTS "${FROM}${REPO}${FILE}")
             message(WARNING "File ${FROM}${REPO}${FILE} does not exist, skipping.")
             continue() # Skip files that do not exist
@@ -44,6 +43,7 @@ foreach(REPO IN LISTS REPOS)
         get_filename_component(DIR "${FILE}" DIRECTORY)
         message(STATUS "Creating directory ${TO}${REPO}${DIR} for file ${FILE}")
         file(MAKE_DIRECTORY "${TO}${REPO}${DIR}")
+        message(STATUS "Copying file to ${TO}${REPO}${FILE}")
         file(COPY "${FROM}${REPO}${FILE}" DESTINATION "${TO}${REPO}${DIR}")
     endforeach()
     if(NOT EXISTS "${TO}${REPO}CMakeLists.txt")
