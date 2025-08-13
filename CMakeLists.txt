@@ -31,21 +31,25 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp")
 # Dependencies
 find_package(OpenCASCADE REQUIRED)
 
-# Sources for this project (glob)
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+# Define the shared library target
+file(GLOB_RECURSE SOURCES "src/step_importer/*.cpp")
+add_library(${PROJECT_NAME}_importer SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME}_importer PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME}_importer PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
 
 # Define the shared library target
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
+file(GLOB_RECURSE SOURCES "src/gen_bindings/*.cpp")
+add_library(${PROJECT_NAME}_bindings SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME}_bindings PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME}_bindings PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
 
-# Install to the demo project with the correct suffix
+# Install the complete bindings to the demo project with the correct suffix
 get_target_property(GODOTCPP_SUFFIX godot-cpp GODOTCPP_SUFFIX)
 set(OUTPUT_NAME "${PROJECT_NAME}${GODOTCPP_SUFFIX}")
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${OUTPUT_NAME}")
 if (NOT DEFINED _INSTALL_TO_ROOT)
     set(_INSTALL_TO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 endif ()
 set(INSTALL_FOLDER "${_INSTALL_TO_ROOT}/demo/addons/${PROJECT_NAME}")
 message("Will install shared library to: ${INSTALL_FOLDER}")
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION "${INSTALL_FOLDER}")
+set_target_properties(${PROJECT_NAME}_importer PROPERTIES OUTPUT_NAME "${OUTPUT_NAME}")
+install(TARGETS ${PROJECT_NAME}_importer LIBRARY DESTINATION "${INSTALL_FOLDER}")
