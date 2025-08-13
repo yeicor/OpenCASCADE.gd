@@ -18,7 +18,7 @@ foreach(REPO IN LISTS REPOS)
     file(MAKE_DIRECTORY "${TO}${REPO}")
     message(STATUS "Copying sources from ${FROM}${REPO} to ${TO}${REPO}")
     execute_process(
-        COMMAND ${ ls-files
+        COMMAND ${GIT_EXECUTABLE} ls-files
         WORKING_DIRECTORY "${FROM}${REPO}"
         OUTPUT_VARIABLE REPO_FILES
         ERROR_VARIABLE REPO_FILES_ERROR
