@@ -22,6 +22,9 @@ jobs:
             { os: "windows-2025", vcpkg_triplet: "x64-mingw-static" },
             { os: "windows-2025", vcpkg_triplet: "x86-mingw-static" },
             { os: "windows-2025", vcpkg_triplet: "arm64-mingw-static" },
+            { os: "windows-2025", vcpkg_triplet: "x64-windows-static" }, # MSVC instead of mingw
+            { os: "windows-2025", vcpkg_triplet: "x86-windows-static" }, # MSVC instead of mingw
+            { os: "windows-2025", vcpkg_triplet: "arm64-windows-static" }, # MSVC instead of mingw
             { os: "macos-15", vcpkg_triplet: "arm64-osx" },
             { os: "macos-15", vcpkg_triplet: "x64-osx" },
             { os: "ubuntu-24.04", vcpkg_triplet: "wasm32-emscripten-pic" },
@@ -47,9 +50,19 @@ jobs:
       - if: "matrix.target.vcpkg_triplet == 'arm-linux'"
         run: "sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf && echo \"cmake_extra_args='-DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc', '-DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++'\" >> $GITHUB_ENV"
       - if: "matrix.target.os == 'ubuntu-24.04' || matrix.target.os == 'ubuntu-24.04-arm'"
-        run: "sudo apt-get update && sudo apt-get install -y libx11-dev libgl1-mesa-dev libfontconfig-dev"
-      - if: "matrix.target.os == 'windows-2025'"
-        uses: "egor-tensin/setup-mingw@v2" # TODO: Remove (it seems MSVC is used even if mingw is installed)
+        run: | # Need to install some system dependencies (for the target platform! not the host)
+          set -ex
+          arch_selector = ""
+          if [ "${{ matrix.target.vcpkg_triplet }}" == "x86-linux" ]; then
+            arch_selector=":i386"
+            sudo dpkg --add-architecture i386
+          elif [ "${{ matrix.target.vcpkg_triplet }}" == "arm-linux" ]; then
+            arch_selector=":armhf"
+            sudo dpkg --add-architecture armhf
+          fi # Others use the native architecture
+          sudo apt-get update && sudo apt-get install -y "libx11-dev${arch_selector}" "libgl1-mesa-dev${arch_selector}" "libfontconfig-dev${arch_selector}"
+      - if: "matrix.target.os == 'windows-2025' && contains(matrix.target.vcpkg_triplet, '-mingw')"
+        uses: "egor-tensin/setup-mingw@v2"
         with:
           version: "12.2.0" # It seems like newer versions are broken (follow godot-cpp)
       - if: "matrix.target.os == 'windows-2025'"
@@ -85,8 +98,6 @@ jobs:
       # <Install and build>
       - shell: "bash"
         run: | # HACK: Customize the vcpkg install of the main repo package with custom CMAKE_ARGS
-          export __OPENCASCADE_GD_CMAKE_ARGS="-DGODOTCPP_TARGET=${{ matrix.target-type }} -DGODOTCPP_PRECISION=${{ matrix.float-precision }} ${{ env.cmake_extra_args }}"
-          echo "$__OPENCASCADE_GD_CMAKE_ARGS" >__OPENCASCADE_GD_CMAKE_ARGS # Alternative way to pass the variable (required for windows)
           "$VCPKG_ROOT/bootstrap-vcpkg${{matrix.target.os == 'windows-2025' && '.bat' || '.sh'}}"
           "$VCPKG_ROOT/vcpkg${{matrix.target.os == 'windows-2025' && '.exe' || ''}}" remove opencascade-gd --classic || true  # Avoid caching too much
           "$VCPKG_ROOT/vcpkg${{matrix.target.os == 'windows-2025' && '.exe' || ''}}" install opencascade-gd --classic
@@ -96,6 +107,7 @@ jobs:
           VCPKG_DEFAULT_TRIPLET: "${{ matrix.target.vcpkg_triplet }}"
           VCPKG_OVERLAY_TRIPLETS: "vcpkg_triplets"
           VCPKG_OVERLAY_PORTS: "vcpkg_ports"
+          __OPENCASCADE_GD_CMAKE_ARGS: "-DGODOTCPP_TARGET=${{ matrix.target-type }} -DGODOTCPP_PRECISION=${{ matrix.float-precision }} ${{ env.cmake_extra_args }}"
       # </Install and build>
 
       # <Export artifacts>

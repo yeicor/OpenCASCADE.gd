@@ -26,6 +26,13 @@ endif ()
 
 # Godot C++ bindings
 set(GODOTCPP_DISABLE_EXCEPTIONS OFF)  # OpenCASCADE requires exceptions
+# FIXME: Godot tries to find cocoa for all apple platforms, open an issue in godot-cpp to fix this
+if(APPLE AND IOS)
+    file(READ "${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp/cmake/macos.cmake" MACOS_CMAKE_CONTENTS)
+    string(REPLACE "if(APPLE)" "if(APPLE AND NOT IOS)" MACOS_CMAKE_CONTENTS "${MACOS_CMAKE_CONTENTS}")
+    file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp/cmake/macos.cmake" "${MACOS_CMAKE_CONTENTS}")
+    message(WARNING "Modified godot-cpp macos.cmake to not include cocoa for iOS builds:\n${MACOS_CMAKE_CONTENTS}")
+endif()
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp")
 
 # Dependencies
