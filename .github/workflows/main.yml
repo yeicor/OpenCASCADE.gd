@@ -52,7 +52,7 @@ jobs:
       - if: "matrix.target.os == 'ubuntu-24.04' || matrix.target.os == 'ubuntu-24.04-arm'"
         run: | # Need to install some system dependencies (for the target platform! not the host)
           set -ex
-          arch_selector = ""
+          arch_selector=""
           if [ "${{ matrix.target.vcpkg_triplet }}" == "x86-linux" ]; then
             arch_selector=":i386"
             sudo dpkg --add-architecture i386
