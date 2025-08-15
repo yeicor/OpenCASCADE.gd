@@ -27,12 +27,12 @@ endif ()
 # Godot C++ bindings
 set(GODOTCPP_DISABLE_EXCEPTIONS OFF)  # OpenCASCADE requires exceptions
 # FIXME: Godot tries to find cocoa for all apple platforms, open an issue in godot-cpp to fix this
-if(APPLE AND IOS)
+if (APPLE AND IOS)
     file(READ "${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp/cmake/macos.cmake" MACOS_CMAKE_CONTENTS)
     string(REPLACE "if(APPLE)" "if(FALSE)" MACOS_CMAKE_CONTENTS "${MACOS_CMAKE_CONTENTS}")
     file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp/cmake/macos.cmake" "${MACOS_CMAKE_CONTENTS}")
     message(WARNING "Modified godot-cpp macos.cmake to not include cocoa for iOS builds:\n${MACOS_CMAKE_CONTENTS}")
-endif()
+endif ()
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp")
 
 # Dependencies
@@ -46,11 +46,11 @@ target_link_libraries(${PROJECT_NAME}_importer PRIVATE godot-cpp ${OpenCASCADE_L
 
 # Define the shared library target
 file(GLOB_RECURSE SOURCES "src/gen_bindings/*.cpp")
-if(SOURCES) # TODO: automate generating them during build
+if (SOURCES) # TODO: automate generating them during build
     add_library(${PROJECT_NAME}_bindings SHARED ${SOURCES})
     target_include_directories(${PROJECT_NAME}_bindings PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME}_bindings PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
-endif()
+endif ()
 
 # Install the complete bindings to the demo project with the correct suffix
 get_target_property(GODOTCPP_SUFFIX godot-cpp GODOTCPP_SUFFIX)
@@ -62,3 +62,4 @@ set(INSTALL_FOLDER "${_INSTALL_TO_ROOT}/demo/addons/${PROJECT_NAME}")
 message("Will install shared library to: ${INSTALL_FOLDER}")
 set_target_properties(${PROJECT_NAME}_importer PROPERTIES OUTPUT_NAME "${OUTPUT_NAME}")
 install(TARGETS ${PROJECT_NAME}_importer LIBRARY DESTINATION "${INSTALL_FOLDER}")
+# FIXME: Try harder to install to the proper directory on windows???
