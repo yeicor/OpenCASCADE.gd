@@ -115,6 +115,10 @@ jobs:
           "$VCPKG_ROOT/bootstrap-vcpkg${{matrix.target.os == 'windows-2025' && '.bat' || '.sh'}}"
           "$VCPKG_ROOT/vcpkg${{matrix.target.os == 'windows-2025' && '.exe' || ''}}" remove opencascade-gd --classic || true  # Avoid caching too much
           "$VCPKG_ROOT/vcpkg${{matrix.target.os == 'windows-2025' && '.exe' || ''}}" install opencascade-gd --classic
+          # For some unknown reason, cmake + windows does not install the dll to the proper folder, do it here...
+          if [ "${{ matrix.target.os }}" == "windows-2025" ]; then
+              cp "vcpkg/buildtrees/opencascade-gd/${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type == 'template_debug' && 'dbg' || 'rel' }}"/*.dll "demo/addons/OpenCASCADE.gd/"
+          fi
         env:
           VCPKG_ROOT: "vcpkg"
           VCPKG_DISABLE_METRICS: "1"
@@ -125,6 +129,8 @@ jobs:
       # </Install and build>
 
       # <Cache save and export artifacts>
+      - shell: "bash" # Print cache statistics
+        run: "sccache --show-stats || true"
       - uses: "actions/upload-artifact@v4"
         with:
           name: "OpenCASCADE.gd-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"

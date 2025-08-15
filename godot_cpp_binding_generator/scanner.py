@@ -131,94 +131,138 @@ class APIScanner:
                 continue
 
             if k in (CursorKind.CLASS_DECL, CursorKind.STRUCT_DECL, CursorKind.CLASS_TEMPLATE):
-                if not c.spelling:
-                    # Skip anonymous declarations
+                if not getattr(c, "spelling", None):
                     continue
-
-                fq = self._fq(c)
-                flat = collapse_name(fq)
-                logger.info("API candidate class: %s", fq)
-
-                cls: Dict[str, Any] = {"fq": fq, "methods": [], "constructors": [], "enums": []}
-
-                # Inspect class members
-                for child in c.get_children():
-                    access_ok = getattr(child, "access_specifier", None) == AccessSpecifier.PUBLIC
-
-                    if child.kind == CursorKind.CXX_METHOD and access_ok:
-                        is_static = False
-                        is_const = False
-                        try:
-                            is_static = bool(child.is_static_method())
-                        except Exception:
-                            pass
-                        try:
-                            is_const = bool(child.is_const_method())
-                        except Exception:
-                            pass
-
-                        # Parameters: list of (name, type)
-                        params: List[Tuple[str, Any]] = []
-                        try:
-                            for i, p in enumerate(child.get_arguments()):
-                                pname = getattr(p, "spelling", None) or f"arg{i}"
-                                ptype = getattr(p, "type", None) or _TypeShim("Variant")  # type: ignore[assignment]
-                                params.append((pname, ptype))
-                        except Exception:
-                            # If arguments are not retrievable, still record the method signature without params
-                            params = []
-
-                        # Result type
-                        try:
-                            ret_type = child.result_type
-                        except Exception:
-                            # Fallback to Variant-like by emitting as opaque later
-                            ret_type = _TypeShim("Variant")  # type: ignore[assignment]
-
-                        cls["methods"].append(
-                            {
-                                "name": child.spelling,
-                                "ret": ret_type,
-                                "params": params,
-                                "is_static": is_static,
-                                "is_const": is_const,
-                            }
-                        )
-
-                    elif child.kind == CursorKind.CONSTRUCTOR and access_ok:
-                        # Constructors: synthesize a callable 'construct' method with the same parameters
-                        params: List[Tuple[str, Any]] = []
-                        try:
-                            for i, p in enumerate(child.get_arguments()):
-                                pname = getattr(p, "spelling", None) or f"arg{i}"
-                                ptype = getattr(p, "type", None) or _TypeShim("Variant")  # type: ignore[assignment]
-                                params.append((pname, ptype))
-                        except Exception:
-                            params = []
-                        # Synthesize a 'return type' as the class record itself
-                        cls["constructors"].append(
-                            {
-                                "name": "construct",
-                                "ret": _TypeShim(fq),
-                                "params": params,
-                            }
-                        )
-
-                    elif child.kind == CursorKind.ENUM_DECL:
-                        vals: List[Tuple[str, int]] = []
-                        for gc in child.get_children():
-                            if gc.kind == CursorKind.ENUM_CONSTANT_DECL:
-                                try:
-                                    vals.append((gc.spelling, int(gc.enum_value)))
-                                except Exception:
-                                    vals.append((gc.spelling, 0))
-                        cls["enums"].append({"name": child.spelling, "values": vals})
-
-                # Store/overwrite by flat key (namespaces collapsed)
+                result = self._process_class_decl(c)
+                if result is None:
+                    continue
+                flat, cls = result
                 self.classes[flat] = cls
+                continue
 
-            else:
-                self._walk(c, namespace_prefix)
+            # Recurse into non-class nodes
+            self._walk(c, namespace_prefix)
+
+    def _process_class_decl(self, cursor: "cindex.Cursor") -> Optional[Tuple[str, Dict[str, Any]]]:
+        """
+        Build the class API model from a class/struct/template cursor.
+        """
+        fq = self._fq(cursor)
+        if not fq:
+            return None
+        flat = collapse_name(fq)
+        logger.info("API candidate class: %s", fq)
+
+        cls: Dict[str, Any] = {"fq": fq, "methods": [], "constructors": [], "enums": []}
+
+        for child in cursor.get_children():
+            if child.kind == CursorKind.CXX_METHOD and self._is_public(child):
+                method = self._collect_method(child)
+                if method is not None:
+                    cls["methods"].append(method)
+                continue
+
+            if child.kind == CursorKind.CONSTRUCTOR and self._is_public(child):
+                ctor = self._collect_constructor(child, fq)
+                if ctor is not None:
+                    cls["constructors"].append(ctor)
+                continue
+
+            if child.kind == CursorKind.ENUM_DECL:
+                enum_info = self._collect_enum(child)
+                if enum_info is not None:
+                    cls["enums"].append(enum_info)
+                continue
+
+        return flat, cls
+
+    def _is_public(self, cursor: "cindex.Cursor") -> bool:
+        """
+        Check if a cursor has public access (defensively).
+        """
+        try:
+            return getattr(cursor, "access_specifier", None) == AccessSpecifier.PUBLIC
+        except Exception:
+            return False
+
+    def _collect_params(self, fn_cursor: "cindex.Cursor") -> List[Tuple[str, Any]]:
+        """
+        Extract parameters as (name, type) tuples. Falls back gracefully.
+        """
+        params: List[Tuple[str, Any]] = []
+        try:
+            for i, p in enumerate(fn_cursor.get_arguments()):
+                pname = getattr(p, "spelling", None) or f"arg{i}"
+                ptype = getattr(p, "type", None) or _TypeShim("Variant")  # type: ignore[assignment]
+                params.append((pname, ptype))
+        except Exception:
+            # Best-effort: keep empty params if we can't retrieve them
+            return []
+        return params
+
+    def _safe_result_type(self, fn_cursor: "cindex.Cursor") -> Any:
+        """
+        Get result type with a safe fallback.
+        """
+        try:
+            return fn_cursor.result_type
+        except Exception:
+            return _TypeShim("Variant")  # type: ignore[assignment]
+
+    def _collect_method(self, method_cursor: "cindex.Cursor") -> Optional[Dict[str, Any]]:
+        """
+        Collect method information into a serializable dict.
+        """
+        try:
+            is_static = False
+            is_const = False
+            try:
+                is_static = bool(method_cursor.is_static_method())
+            except Exception:
+                pass
+            try:
+                is_const = bool(method_cursor.is_const_method())
+            except Exception:
+                pass
+
+            params = self._collect_params(method_cursor)
+            ret_type = self._safe_result_type(method_cursor)
+
+            return {
+                "name": method_cursor.spelling,
+                "ret": ret_type,
+                "params": params,
+                "is_static": is_static,
+                "is_const": is_const,
+            }
+        except Exception:
+            return None
+
+    def _collect_constructor(self, ctor_cursor: "cindex.Cursor", fq: str) -> Optional[Dict[str, Any]]:
+        """
+        Collect constructor into a synthesized callable-like dict.
+        """
+        try:
+            params = self._collect_params(ctor_cursor)
+            return {"name": "construct", "ret": _TypeShim(fq), "params": params}
+        except Exception:
+            return None
+
+    def _collect_enum(self, enum_cursor: "cindex.Cursor") -> Optional[Dict[str, Any]]:
+        """
+        Collect enum name and its constant values.
+        """
+        try:
+            vals: List[Tuple[str, int]] = []
+            for gc in enum_cursor.get_children():
+                if gc.kind == CursorKind.ENUM_CONSTANT_DECL:
+                    try:
+                        vals.append((gc.spelling, int(gc.enum_value)))
+                    except Exception:
+                        vals.append((gc.spelling, 0))
+            return {"name": enum_cursor.spelling, "values": vals}
+        except Exception:
+            return None
 
     def _fq(self, cursor: "cindex.Cursor") -> str:
         """
@@ -228,8 +272,8 @@ class APIScanner:
         parts: List[str] = []
         cur = cursor
         while cur and cur.kind != CursorKind.TRANSLATION_UNIT:
-            if cur.spelling:
+            if getattr(cur, "spelling", None):
                 parts.append(cur.spelling)
-            cur = cur.semantic_parent
+            cur = getattr(cur, "semantic_parent", None)
         parts.reverse()
         return "::".join(parts)

@@ -50,6 +50,11 @@ class MultiPassIndexer:
         - Classify arbitrary spellings to categories used by the emitter/scanner.
     """
 
+    # Group cursor kinds to reduce branching in visitors
+    _TYPEDEF_KINDS = {CursorKind.TYPEDEF_DECL, CursorKind.TYPE_ALIAS_DECL}
+    _RECORD_KINDS = {CursorKind.STRUCT_DECL, CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE}
+    _ENUM_KIND = CursorKind.ENUM_DECL
+
     def __init__(
         self,
         index: "cindex.Index",
@@ -108,63 +113,72 @@ class MultiPassIndexer:
         """
         if cursor is None:
             return
+
         for c in cursor.get_children():
-            try:
-                k = c.kind
-            except Exception:
+            kind = getattr(c, "kind", None)
+            if kind is None:
                 continue
 
-            # Typedefs and using aliases
-            if k in (CursorKind.TYPEDEF_DECL, CursorKind.TYPE_ALIAS_DECL):
-                name = c.spelling or ""
-                if not name:
-                    continue
-                ti = self.types.get(name) or TypeInfo(name, "typedef", c)
-                # Try to discover the underlying type spelling
-                underlying: Optional[str] = None
+            handler = self._get_handler_for_kind(kind)
+            if handler is not None:
                 try:
-                    underlying = c.typedef_type.spelling  # type: ignore[attr-defined]
-                except Exception:
-                    try:
-                        underlying = c.type.spelling
-                    except Exception:
-                        underlying = None
-                ti.underlying = underlying
-                self.types[name] = ti
-
-            # Records: struct/class/class template declarations
-            elif k in (CursorKind.STRUCT_DECL, CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE):
-                if not c.spelling:
-                    # Skip anonymous classes/structs
-                    continue
-                fq = self._fq_name(c)
-                ti = self.types.get(fq) or TypeInfo(fq, "record", c)
-                try:
-                    ti.is_definition = c.is_definition()
-                except Exception:
-                    ti.is_definition = False
-                self.types[fq] = ti
-
-            # Enums and their values
-            elif k == CursorKind.ENUM_DECL:
-                if not c.spelling:
-                    continue
-                name = c.spelling
-                ti = self.types.get(name) or TypeInfo(name, "enum", c)
-                values: List[Tuple[str, int]] = []
-                for child in c.get_children():
-                    if child.kind == CursorKind.ENUM_CONSTANT_DECL:
-                        try:
-                            values.append((child.spelling, int(child.enum_value)))
-                        except Exception:
-                            # Fallback to name with zero if value is unavailable
-                            values.append((child.spelling, 0))
-                ti.enum_values = values
-                self.types[name] = ti
-
-            # Descend into other nodes
+                    handler(c)
+                except Exception as exc:
+                    logger.debug("Handler failed for cursor %r: %s", getattr(c, "spelling", ""), exc)
             else:
                 self._visit(c)
+
+    def _get_handler_for_kind(self, kind: "CursorKind"):
+        if kind in self._TYPEDEF_KINDS:
+            return self._handle_typedef
+        if kind in self._RECORD_KINDS:
+            return self._handle_record
+        if kind == self._ENUM_KIND:
+            return self._handle_enum
+        return None
+
+    def _handle_typedef(self, c: "cindex.Cursor") -> None:
+        name = c.spelling or ""
+        if not name:
+            return
+        ti = self.types.get(name) or TypeInfo(name, "typedef", c)
+        underlying: Optional[str] = None
+        try:
+            underlying = c.typedef_type.spelling  # type: ignore[attr-defined]
+        except Exception:
+            try:
+                underlying = c.type.spelling
+            except Exception:
+                underlying = None
+        ti.underlying = underlying
+        self.types[name] = ti
+
+    def _handle_record(self, c: "cindex.Cursor") -> None:
+        if not c.spelling:
+            # Skip anonymous classes/structs
+            return
+        fq = self._fq_name(c)
+        ti = self.types.get(fq) or TypeInfo(fq, "record", c)
+        try:
+            ti.is_definition = c.is_definition()
+        except Exception:
+            ti.is_definition = False
+        self.types[fq] = ti
+
+    def _handle_enum(self, c: "cindex.Cursor") -> None:
+        if not c.spelling:
+            return
+        name = c.spelling
+        ti = self.types.get(name) or TypeInfo(name, "enum", c)
+        values: List[Tuple[str, int]] = []
+        for child in c.get_children():
+            if child.kind == cindex.CursorKind.ENUM_CONSTANT_DECL:
+                try:
+                    values.append((child.spelling, int(child.enum_value)))
+                except Exception:
+                    values.append((child.spelling, 0))
+        ti.enum_values = values
+        self.types[name] = ti
 
     def _fq_name(self, cursor: "cindex.Cursor") -> str:
         """
@@ -209,7 +223,7 @@ class MultiPassIndexer:
             return ti.name
         return cur
 
-    def classify_spelling(self, spelling: str) -> Dict[str, Any]:
+    def classify_spelling(self, spelling: str, _seen: Optional[set[str]] = None) -> Dict[str, Any]:
         """
         Classify a type spelling into a normalized category understood by the
         emitter and scanner.
@@ -229,6 +243,13 @@ class MultiPassIndexer:
         if spelling in self.mapping_overrides:
             return {"kind": "override", "mapping": self.mapping_overrides[spelling]}
 
+        # Cycle guard for recursive classification across typedefs/aliases
+        if _seen is None:
+            _seen = set()
+        if spelling in _seen:
+            return {"kind": "opaque", "name": spelling, "note": "cycle"}
+        _seen.add(spelling)
+
         # Resolve through typedef/alias chains
         resolved = self.resolve_typedef_chain(spelling) or spelling
 
@@ -246,7 +267,7 @@ class MultiPassIndexer:
                 return {"kind": "record" if ti.is_definition else "opaque", "name": ti.name, "def": ti.is_definition}
             if ti.kind in ("typedef", "override") and ti.underlying:
                 # Recursively classify the underlying type
-                return self.classify_spelling(ti.underlying)
+                return self.classify_spelling(ti.underlying, _seen)
 
         # Heuristics for smart pointers and templates common in large C++ libs
         # OCCT Handle<T>, variations, etc.
@@ -259,7 +280,7 @@ class MultiPassIndexer:
             m = re.search(r"std::vector\s*<\s*([^>]+)\s*>", spelling)
             if m:
                 inner = m.group(1).strip()
-                inner_cls = self.classify_spelling(inner)
+                inner_cls = self.classify_spelling(inner, _seen)
                 return {"kind": "vector", "inner": inner, "inner_cls": inner_cls}
             return {"kind": "opaque", "name": spelling, "note": "vector"}
 
