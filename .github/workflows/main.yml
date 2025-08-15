@@ -39,6 +39,8 @@ jobs:
         float-precision: [ "single" ] # TODO: , "double"
 
     runs-on: "${{ matrix.target.os }}"
+    permissions:
+      actions: "write" # For ccache
     steps:
       - uses: "actions/checkout@v4"
         with:
@@ -62,9 +64,11 @@ jobs:
           fi # Others use the native architecture
           sudo apt-get update && sudo apt-get install -y "libx11-dev${arch_selector}" "libgl1-mesa-dev${arch_selector}" "libfontconfig-dev${arch_selector}"
       - if: "matrix.target.os == 'windows-2025' && contains(matrix.target.vcpkg_triplet, '-mingw')"
-        uses: "egor-tensin/setup-mingw@v2"
+        uses: "msys2/setup-msys2@v2"
         with:
-          version: "12.2.0" # It seems like newer versions are broken (follow godot-cpp)
+          install: |
+            make
+            mingw-w64-x86_64-toolchain
       - if: "matrix.target.os == 'windows-2025'"
         run: "echo 'LDFLAGS=-Wl,-allow-multiple-definition' >> $GITHUB_ENV"
       - if: "matrix.target.os == 'macos-15'"
@@ -85,20 +89,23 @@ jobs:
         run: "echo \"ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}\" >> $GITHUB_ENV"  # && echo \"cmake_extra_args='-DANDROID_ABI=${{ matrix.target.cmake_sys_proc }}', '-UCMAKE_SYSTEM_PROCESSOR'\"
       # </Triplet-specific setup>
 
-      # <Use previous build artifacts as a cache (hack to have more storage space, for up to 90 days)>
+      # <Cache restore>
+      - uses: "Chocobo1/setup-ccache-action@v1"
+        with:
+          windows_compile_environment: "${{contains(matrix.target.vcpkg_triplet, '-mingw') && 'msys2' || 'msvc'}}"
       - shell: "bash"
         run: |
           set -ex
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
           last_workflow_id=$(gh run list --workflow="${{ github.workflow }}" --branch="${{ github.ref_name }}" --status=completed --json databaseId --jq '[.[] | select(.conclusion == "success")][0].databaseId')
           mkdir tmp_cache && cd tmp_cache
-          gh run download "$last_workflow_id" --name "build-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}" || \
+          gh run download "$last_workflow_id" --name "vcpkg-installed-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}" || \
               echo "::warning ::Failed to download and extract previous vcpkg installed artifacts, skipping cache..."
           cd ..
           [[ -d vcpkg/installed ]] || mkdir -p vcpkg/installed
           mv tmp_cache/* vcpkg/installed/
           find vcpkg/installed/ || echo "vcpkg/installed/ not found"  # For debugging purposes, to see if the cache was restored
-      # </Use previous build artifacts as a cache>
+      # </Cache restore>
 
       # <Install and build>
       - shell: "bash"
