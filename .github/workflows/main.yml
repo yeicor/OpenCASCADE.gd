@@ -117,7 +117,7 @@ jobs:
           "$VCPKG_ROOT/vcpkg${{matrix.target.os == 'windows-2025' && '.exe' || ''}}" install opencascade-gd --classic
           # For some unknown reason, cmake + windows does not install the dll to the proper folder, do it here...
           if [ "${{ matrix.target.os }}" == "windows-2025" ]; then
-              cp "vcpkg/buildtrees/opencascade-gd/${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type == 'template_debug' && 'dbg' || 'rel' }}"/*.dll "demo/addons/OpenCASCADE.gd/"
+              cp "vcpkg/packages/opencascade-gd_${{ matrix.target.vcpkg_triplet }}/${{ matrix.target-type == 'template_debug' && 'debug/' || '' }}bin"/*.dll "demo/addons/OpenCASCADE.gd/"
           fi
         env:
           VCPKG_ROOT: "vcpkg"
@@ -139,7 +139,7 @@ jobs:
         if: "always()"
         with:
           name: "vcpkg-installed-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
-          path: "vcpkg/installed/\n.cache"
+          path: "vcpkg/installed/\n${{ env.SCCACHE_DIR }}"
       - uses: "actions/upload-artifact@v4"
         if: "always()"
         with: # Build artifacts useful for debugging in a local environment
