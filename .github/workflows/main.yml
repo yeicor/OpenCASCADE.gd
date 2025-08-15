@@ -132,19 +132,19 @@ jobs:
       - shell: "bash" # Print cache statistics
         run: "sccache --show-stats || true"
       - uses: "actions/upload-artifact@v4"
-        with:
+        with: # Build main artifact with only the addon files
           name: "OpenCASCADE.gd-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
           path: "demo/addons/OpenCASCADE.gd/**"
       - uses: "actions/upload-artifact@v4"
         if: "always()"
-        with:
+        with: # Build artifact useful for caching
           name: "vcpkg-installed-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
           path: "vcpkg/installed/\n${{ env.SCCACHE_DIR }}"
       - uses: "actions/upload-artifact@v4"
         if: "always()"
-        with: # Build artifacts useful for debugging in a local environment
-          name: "vcpkg-buildtree-logs-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
-          path: "vcpkg/buildtrees/**/*.log"
+        with: # Build artifact useful for debugging
+          name: "vcpkg-buildtrees-packages-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
+          path: "vcpkg/buildtrees/\ncpkg/packages/"
       # </Export artifacts>
   merge:
     runs-on: "ubuntu-24.04"
