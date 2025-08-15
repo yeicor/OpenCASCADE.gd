@@ -93,11 +93,12 @@ jobs:
         run: | # Installed packages and caches are exported for use as a cache in the next workflow run
           set -ex
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
-          last_workflow_id=$(gh run list --workflow="${{ github.workflow }}" --branch="${{ github.ref_name }}" --status=completed --json databaseId --jq '[.[] | select(.conclusion == "success")][0].databaseId')
+          last_workflow_id=$(gh run list --workflow="${{ github.workflow }}" --branch="${{ github.ref_name }}" --status=completed --jq '[.[] | select(.conclusion != "cancelled")]' | grep -Eo '"databaseId":[0-9]+' | sed 's/"databaseId"://g' | tail -n 1)
           gh run download "$last_workflow_id" --name "vcpkg-installed-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}" || \
               echo "::warning ::Failed to download and extract previous vcpkg installed artifacts, skipping cache..."
           find vcpkg/installed/ || echo "vcpkg/installed/ not found"  # For debugging purposes, to see if the cache was restored
           echo "SCCACHE_DIR=${{ github.workspace }}/.cache/sccache" >> $GITHUB_ENV
+          echo "SCCACHE_CACHE_SIZE=1G" >> $GITHUB_ENV # Just enough to keep the most recent project cached (as vcpkg's installed directory is copied directly)
       # </Cache restore>
 
       # <Install and build>

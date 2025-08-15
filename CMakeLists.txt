@@ -2,6 +2,7 @@ MESSAGE(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(OpenCASCADE.gd CXX)
 
 # Check that both CMAKE_BUILD_TYPE and GODOTCPP_TARGET are set correctly (always required)
@@ -58,19 +59,13 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp")
 # Dependencies
 find_package(OpenCASCADE REQUIRED)
 
-# Define the shared library target
-file(GLOB_RECURSE SOURCES "src/step_importer/*.cpp")
-add_library(${PROJECT_NAME}_importer SHARED ${SOURCES})
-target_include_directories(${PROJECT_NAME}_importer PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_importer PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
+# TODO: automatically generate bindings during build (poetry run python ...)
 
 # Define the shared library target
-file(GLOB_RECURSE SOURCES "src/gen_bindings/*.cpp")
-if (SOURCES) # TODO: automate generating them during build
-    add_library(${PROJECT_NAME}_bindings SHARED ${SOURCES})
-    target_include_directories(${PROJECT_NAME}_bindings PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME}_bindings PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
-endif ()
+file(GLOB_RECURSE SOURCES "src/**/*.cpp")
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
 
 # Install the complete bindings to the demo project with the correct suffix
 get_target_property(GODOTCPP_SUFFIX godot-cpp GODOTCPP_SUFFIX)
@@ -80,6 +75,6 @@ if (NOT DEFINED _INSTALL_TO_ROOT)
 endif ()
 set(INSTALL_FOLDER "${_INSTALL_TO_ROOT}/demo/addons/${PROJECT_NAME}")
 message("Will install shared library to: ${INSTALL_FOLDER}")
-set_target_properties(${PROJECT_NAME}_importer PROPERTIES OUTPUT_NAME "${OUTPUT_NAME}")
-install(TARGETS ${PROJECT_NAME}_importer LIBRARY DESTINATION "${INSTALL_FOLDER}")
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${OUTPUT_NAME}")
+install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION "${INSTALL_FOLDER}")
 # FIXME: Try harder to install to the proper directory on windows???

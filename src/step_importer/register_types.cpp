@@ -6,24 +6,21 @@
 
 using namespace godot;
 
-void initialize_gdextension_types([[maybe_unused]] ModuleInitializationLevel p_level) {
+void initialize_gdextension_types_step_importer([[maybe_unused]] ModuleInitializationLevel p_level) {
     if (p_level < MODULE_INITIALIZATION_LEVEL_SCENE) return; // Only initialize at the SCENE level or higher.
     GDREGISTER_CLASS(StepIgesBRepImporter);
 }
 
-void uninitialize_gdextension_types([[maybe_unused]] ModuleInitializationLevel p_level) {
+void uninitialize_gdextension_types_step_importer([[maybe_unused]] ModuleInitializationLevel p_level) {
 }
 
-extern "C" {
-// Initialization
-GDExtensionBool GDE_EXPORT opencascade_gd_library_init(GDExtensionInterfaceGetProcAddress p_get_proc_address,
+GDExtensionBool opencascade_gd_library_init_step_importer(GDExtensionInterfaceGetProcAddress p_get_proc_address,
                                                        GDExtensionClassLibraryPtr p_library,
                                                        GDExtensionInitialization *r_initialization) {
     GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
-    init_obj.register_initializer(initialize_gdextension_types);
-    init_obj.register_terminator(uninitialize_gdextension_types);
+    init_obj.register_initializer(initialize_gdextension_types_step_importer);
+    init_obj.register_terminator(uninitialize_gdextension_types_step_importer);
     init_obj.set_minimum_library_initialization_level(MODULE_INITIALIZATION_LEVEL_SCENE);
 
     return init_obj.init();
-}
 }
