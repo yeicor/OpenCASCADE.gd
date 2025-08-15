@@ -24,6 +24,24 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT GODOTCPP_TARGET STREQUAL "template
     return()
 endif ()
 
+# Auto-enable ccache-like functionality if available since we are rebuilding godot-cpp and the bindings frequently
+# If ccache, sccache or similar is found, use it as the CMAKE_{C,CXX}_COMPILER_LAUNCHER
+find_program(CCACHE_EXECUTABLE ccache)
+if(CCACHE_EXECUTABLE)
+    message(STATUS "Using ccache as compiler launcher: ${CCACHE_EXECUTABLE}")
+    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE})
+endif()
+find_program(SCCACHE_EXECUTABLE sccache)
+if(SCCACHE_EXECUTABLE)
+    message(STATUS "Using sccache as compiler launcher: ${SCCACHE_EXECUTABLE}")
+    set(CMAKE_C_COMPILER_LAUNCHER ${SCCACHE_EXECUTABLE})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${SCCACHE_EXECUTABLE})
+endif()
+if(NOT CCACHE_EXECUTABLE AND NOT SCCACHE_EXECUTABLE)
+    message(STATUS "No ccache or sccache found, not using a compiler launcher")
+endif()
+
 # Godot C++ bindings
 set(GODOTCPP_DISABLE_EXCEPTIONS OFF)  # OpenCASCADE requires exceptions
 # FIXME: Godot tries to find cocoa for all apple platforms, open an issue in godot-cpp to fix this

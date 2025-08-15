@@ -15,32 +15,30 @@ jobs:
       matrix:
         target:
           [ # https://docs.godotengine.org/en/stable/about/system_requirements.html
-            { os: "ubuntu-24.04", vcpkg_triplet: "x64-linux" },
-            { os: "ubuntu-24.04", vcpkg_triplet: "x86-linux" },
-            { os: "ubuntu-24.04-arm", vcpkg_triplet: "arm64-linux" },
-            { os: "ubuntu-24.04-arm", vcpkg_triplet: "arm-linux" },
-            { os: "windows-2025", vcpkg_triplet: "x64-mingw-static" },
-            { os: "windows-2025", vcpkg_triplet: "x86-mingw-static" },
-            { os: "windows-2025", vcpkg_triplet: "arm64-mingw-static" },
-            { os: "windows-2025", vcpkg_triplet: "x64-windows-static" }, # MSVC instead of mingw
-            { os: "windows-2025", vcpkg_triplet: "x86-windows-static" }, # MSVC instead of mingw
-            { os: "windows-2025", vcpkg_triplet: "arm64-windows-static" }, # MSVC instead of mingw
-            { os: "macos-15", vcpkg_triplet: "arm64-osx" },
-            { os: "macos-15", vcpkg_triplet: "x64-osx" },
-            { os: "ubuntu-24.04", vcpkg_triplet: "wasm32-emscripten-pic" },
-            { os: "ubuntu-24.04", vcpkg_triplet: "x64-android" },
-            { os: "ubuntu-24.04", vcpkg_triplet: "x86-android" },
-            { os: "ubuntu-24.04", vcpkg_triplet: "arm64-android" },
-            { os: "ubuntu-24.04", vcpkg_triplet: "arm-android" },
-            { os: "macos-15", vcpkg_triplet: "arm64-ios" },
+            { vcpkg_triplet: "x64-linux", os: "ubuntu-24.04" },
+            { vcpkg_triplet: "x86-linux", os: "ubuntu-24.04" },
+            { vcpkg_triplet: "arm64-linux", os: "ubuntu-24.04-arm" },
+            { vcpkg_triplet: "arm-linux", os: "ubuntu-24.04-arm" },
+            { vcpkg_triplet: "x64-mingw-static", os: "windows-2025" },
+            { vcpkg_triplet: "x86-mingw-static", os: "windows-2025" },
+            { vcpkg_triplet: "arm64-mingw-static", os: "windows-2025" },
+            { vcpkg_triplet: "x64-windows-static", os: "windows-2025" }, # MSVC instead of mingw
+            { vcpkg_triplet: "x86-windows-static", os: "windows-2025" }, # MSVC instead of mingw
+            { vcpkg_triplet: "arm64-windows-static", os: "windows-2025" }, # MSVC instead of mingw
+            { vcpkg_triplet: "arm64-osx", os: "macos-15" },
+            { vcpkg_triplet: "x64-osx", os: "macos-15" },
+            { vcpkg_triplet: "wasm32-emscripten-pic", os: "ubuntu-24.04" },
+            { vcpkg_triplet: "x64-android", os: "ubuntu-24.04" },
+            { vcpkg_triplet: "x86-android", os: "ubuntu-24.04" },
+            { vcpkg_triplet: "arm64-android", os: "ubuntu-24.04" },
+            { vcpkg_triplet: "arm-android", os: "ubuntu-24.04" },
+            { vcpkg_triplet: "arm64-ios", os: "macos-15" },
           ]
         # Note: vcpkg forces building both Debug and Release on a single run. This is not the same as the templates!
         target-type: [ "template_debug" ] # , "template_release"
         float-precision: [ "single" ] # TODO: , "double"
 
     runs-on: "${{ matrix.target.os }}"
-    permissions:
-      actions: "write" # For ccache
     steps:
       - uses: "actions/checkout@v4"
         with:
@@ -64,11 +62,9 @@ jobs:
           fi # Others use the native architecture
           sudo apt-get update && sudo apt-get install -y "libx11-dev${arch_selector}" "libgl1-mesa-dev${arch_selector}" "libfontconfig-dev${arch_selector}"
       - if: "matrix.target.os == 'windows-2025' && contains(matrix.target.vcpkg_triplet, '-mingw')"
-        uses: "msys2/setup-msys2@v2"
+        uses: "egor-tensin/setup-mingw@v2"
         with:
-          install: |
-            make
-            mingw-w64-x86_64-toolchain
+          version: "12.2.0" # It seems like newer versions are broken (follow godot-cpp)
       - if: "matrix.target.os == 'windows-2025'"
         run: "echo 'LDFLAGS=-Wl,-allow-multiple-definition' >> $GITHUB_ENV"
       - if: "matrix.target.os == 'macos-15'"
@@ -90,10 +86,13 @@ jobs:
       # </Triplet-specific setup>
 
       # <Cache restore>
-      - uses: "Chocobo1/setup-ccache-action@v1"
-        with:
-          windows_compile_environment: "${{contains(matrix.target.vcpkg_triplet, '-mingw') && 'msys2' || 'msvc'}}"
-      - shell: "bash"
+      - uses: "mozilla-actions/sccache-action@v0.0.9"
+      - uses: "actions/cache/restore@v4"
+        id: "build-cache-restore"
+        with: # Used only for our project + godot-cpp, not for vcpkg (see note below)
+          key: "build-cache-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
+          path: ".cache" # Includes sccache and possibly other caches
+      - shell: "bash" # VCPKG DOES NOT USE SCCACHE. This is on purpose, as objects are large and GitHub artifact can store much more than GitHub caches.
         run: |
           set -ex
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
@@ -124,7 +123,12 @@ jobs:
           __OPENCASCADE_GD_CMAKE_ARGS: "-DGODOTCPP_TARGET=${{ matrix.target-type }} -DGODOTCPP_PRECISION=${{ matrix.float-precision }} ${{ env.cmake_extra_args }}"
       # </Install and build>
 
-      # <Export artifacts>
+      # <Cache save and export artifacts>
+      - uses: "actions/cache/save@v4"
+        if: "always()"
+        with:
+          key: "${{ steps.build-cache-restore.outputs.cache-primary-key }}"
+          path: ".cache" # Includes sccache and possibly other caches
       - uses: "actions/upload-artifact@v4"
         with:
           name: "OpenCASCADE.gd-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}"
