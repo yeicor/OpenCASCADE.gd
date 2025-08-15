@@ -91,9 +91,10 @@ jobs:
           set -ex
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
           last_workflow_id=$(gh run list --workflow="${{ github.workflow }}" --branch="${{ github.ref_name }}" --status=completed --json databaseId --limit 1 --jq '.[0].databaseId')
+          mkdir -p vcpkg/installed/ && cd vcpkg/installed/
           gh run download "$last_workflow_id" --name "build-${{ matrix.target.vcpkg_triplet }}-${{ matrix.target-type }}-${{ matrix.float-precision }}" || \
               echo "::warning ::Failed to download and extract previous vcpkg installed artifacts, skipping cache..."
-          find vcpkg/installed/ || echo "vcpkg/installed/ not found"  # For debugging purposes, to see if the cache was restored
+          find . || echo "vcpkg/installed/ not found"  # For debugging purposes, to see if the cache was restored
       # </Use previous build artifacts as a cache>
 
       # <Install and build>
