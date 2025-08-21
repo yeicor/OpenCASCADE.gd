@@ -45,6 +45,20 @@ if(NOT CCACHE_EXECUTABLE AND NOT SCCACHE_EXECUTABLE)
     message(STATUS "No ccache or sccache found, not using a compiler launcher")
 endif()
 
+# Auto-force full LTO in release builds if available
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT IPO_SUPPORT_OUTPUT)
+    if(IPO_SUPPORTED)
+        message(STATUS "IPO (LTO) is supported, enabling it for Release builds")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    else()
+        message(WARNING "IPO (LTO) is not supported: ${IPO_SUPPORT_OUTPUT}")
+    endif()
+else()
+    message(STATUS "IPO (LTO) is not enabled for Debug builds")
+endif()
+
 # Godot C++ bindings
 set(GODOTCPP_DISABLE_EXCEPTIONS OFF)  # OpenCASCADE requires exceptions
 # FIXME: Godot tries to find cocoa for all apple platforms, open an issue in godot-cpp to fix this
@@ -60,20 +74,21 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp")
 find_package(OpenCASCADE REQUIRED)
 
 # Define the documentation sources (the godot-cpp cmake version does not work?)
-find_package(Python3 3.4 REQUIRED) # pathlib should be present
-file(GLOB_RECURSE DOC_XML LIST_DIRECTORIES NO CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/doc_classes/*.xml" "${PROJECT_SOURCE_DIR}/doc_classes/**/*.xml")
-set(DOC_GEN_FILE "${CMAKE_CURRENT_BINARY_DIR}/gen/doc_data.cpp")
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/gen")
-set(PYTHON_LIST "'${DOC_XML}'")
-list(JOIN PYTHON_LIST "','" PYTHON_LIST)
-add_custom_command(
+if(GODOTCPP_TARGET MATCHES "editor|template_debug")
+    find_package(Python3 3.4 REQUIRED) # pathlib should be present
+    file(GLOB_RECURSE DOC_XML LIST_DIRECTORIES NO CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/doc_classes/*.xml" "${PROJECT_SOURCE_DIR}/doc_classes/**/*.xml")
+    set(DOC_GEN_FILE "${CMAKE_CURRENT_BINARY_DIR}/gen/doc_data.cpp")
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/gen")
+    set(PYTHON_LIST "'${DOC_XML}'")
+    list(JOIN PYTHON_LIST "','" PYTHON_LIST)
+    add_custom_command(
     OUTPUT ${DOC_GEN_FILE}
     COMMAND ${Python3_EXECUTABLE} "-c" "from doc_source_generator import generate_doc_source; generate_doc_source('${DOC_GEN_FILE}', [${PYTHON_LIST}])"
     VERBATIM
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp
-    DEPENDS ${DOC_XML}
-)
-add_custom_target(generate_doc_data DEPENDS ${DOC_GEN_FILE})
+    DEPENDS ${DOC_XML})
+    add_custom_target(generate_doc_data DEPENDS ${DOC_GEN_FILE})
+endif()
 
 # Define the shared library target
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/**/*.cpp")

@@ -47,6 +47,8 @@ protected:
 private:
     BRepMesh_IncrementalMesh* _mesh;
     bool _owns_mesh;
+    bool _compute_normals;
+    Ref<ocgd_TopoDS_Shape> _shape; // Store shape reference for normal computation
 
 public:
     //! Default constructor
@@ -68,10 +70,20 @@ public:
                         double linear_deflection,
                         bool is_relative = false,
                         double angular_deflection = 0.5,
-                        bool is_in_parallel = false);
+                        bool is_in_parallel = false,
+                        bool compute_normals = true);
 
     //! Performs meshing of the shape.
     void perform();
+
+    //! Compute normals for the meshed shape using enhanced algorithms
+    void compute_normals();
+
+    //! Returns whether normals should be computed automatically
+    bool get_compute_normals() const;
+
+    //! Set whether to compute normals automatically
+    void set_compute_normals(bool compute_normals);
 
     //! Returns meshing parameters - linear deflection
     double get_linear_deflection() const;

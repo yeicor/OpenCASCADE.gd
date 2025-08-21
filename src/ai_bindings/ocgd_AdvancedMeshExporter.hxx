@@ -58,6 +58,7 @@
 #include <opencascade/TopLoc_Location.hxx>
 #include <opencascade/BRepMesh_IncrementalMesh.hxx>
 #include <opencascade/Message_ProgressRange.hxx>
+#include <opencascade/gp_Vec3f.hxx>
 
 #include "ocgd_TopoDS_Shape.hxx"
 
@@ -248,7 +249,7 @@ public:
     /**
      * @brief Extract mesh data to Godot arrays
      */
-    Dictionary extract_mesh_data(const Ref<ocgd_TopoDS_Shape>& shape);
+    Dictionary extract_mesh_data(const Ref<ocgd_TopoDS_Shape>& shape, bool compute_normals = true);
 
     /**
      * @brief Extract colored mesh data to Godot arrays
@@ -299,15 +300,20 @@ public:
     /**
      * @brief Apply triangulation to shape with current settings
      */
-    bool triangulate_shape(const Ref<ocgd_TopoDS_Shape>& shape) const;
+    bool triangulate_shape(const Ref<ocgd_TopoDS_Shape>& shape, bool compute_normals = true) const;
 
     /**
-     * @brief Get mesh statistics for shape
+     * @brief Validate triangulation data integrity
+     */
+    bool validate_triangulation(const Handle(Poly_Triangulation)& triangulation) const;
+
+    /**
+     * @brief Get mesh statistics for a shape
      */
     Dictionary get_mesh_statistics(const Ref<ocgd_TopoDS_Shape>& shape) const;
 
     /**
-     * @brief Optimize mesh for export (remove duplicate vertices, etc.)
+     * @brief Optimize mesh data by removing duplicates and improving topology
      */
     Dictionary optimize_mesh_data(const Dictionary& mesh_data) const;
 

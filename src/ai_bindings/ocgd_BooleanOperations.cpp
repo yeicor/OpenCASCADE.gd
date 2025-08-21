@@ -93,8 +93,11 @@ Ref<ocgd_TopoDS_Shape> ocgd_BooleanOperations::union_shapes(const Ref<ocgd_TopoD
             _last_error = "Union operation failed";
         }
     } catch (const Standard_Failure& e) {
-        _last_error = "Union operation error: Standard_Failure";
-        UtilityFunctions::printerr("BooleanOperations: Union failed with exception");
+        _last_error = String("Union operation failed: ") + String(e.GetMessageString());
+        UtilityFunctions::printerr("BooleanOperations: Union failed with Standard_Failure - " + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        _last_error = String("Union operation failed: ") + String(e.what());
+        UtilityFunctions::printerr("BooleanOperations: Union failed with exception - " + String(e.what()));
     }
     
     return Ref<ocgd_TopoDS_Shape>();
@@ -127,8 +130,11 @@ Ref<ocgd_TopoDS_Shape> ocgd_BooleanOperations::intersect_shapes(const Ref<ocgd_T
             _last_error = "Intersection operation failed";
         }
     } catch (const Standard_Failure& e) {
-        _last_error = "Intersection operation error: Standard_Failure";
-        UtilityFunctions::printerr("BooleanOperations: Intersection failed with exception");
+        _last_error = String("Intersection operation failed: ") + String(e.GetMessageString());
+        UtilityFunctions::printerr("BooleanOperations: Intersection failed with Standard_Failure - " + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        _last_error = String("Intersection operation failed: ") + String(e.what());
+        UtilityFunctions::printerr("BooleanOperations: Intersection failed with exception - " + String(e.what()));
     }
     
     return Ref<ocgd_TopoDS_Shape>();
@@ -161,8 +167,11 @@ Ref<ocgd_TopoDS_Shape> ocgd_BooleanOperations::subtract_shapes(const Ref<ocgd_To
             _last_error = "Subtraction operation failed";
         }
     } catch (const Standard_Failure& e) {
-        _last_error = "Subtraction operation error: Standard_Failure";
-        UtilityFunctions::printerr("BooleanOperations: Subtraction failed with exception");
+        _last_error = String("Subtraction operation failed: ") + String(e.GetMessageString());
+        UtilityFunctions::printerr("BooleanOperations: Subtraction failed with Standard_Failure - " + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        _last_error = String("Subtraction operation failed: ") + String(e.what());
+        UtilityFunctions::printerr("BooleanOperations: Subtraction failed with exception - " + String(e.what()));
     }
     
     return Ref<ocgd_TopoDS_Shape>();
@@ -194,8 +203,11 @@ Ref<ocgd_TopoDS_Shape> ocgd_BooleanOperations::section_shapes(const Ref<ocgd_Top
             _last_error = "Section operation failed";
         }
     } catch (const Standard_Failure& e) {
-        _last_error = "Section operation error: Standard_Failure";
-        UtilityFunctions::printerr("BooleanOperations: Section failed with exception");
+        _last_error = String("Section operation failed: ") + String(e.GetMessageString());
+        UtilityFunctions::printerr("BooleanOperations: Section failed with Standard_Failure - " + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        _last_error = String("Section operation failed: ") + String(e.what());
+        UtilityFunctions::printerr("BooleanOperations: Section failed with exception - " + String(e.what()));
     }
     
     return Ref<ocgd_TopoDS_Shape>();

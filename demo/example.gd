@@ -13,10 +13,10 @@ func _run() -> void:
 	for shape_ in ret["all_shapes"]:
 		print("Processing shape " + str(shape_))
 		var shape: ocgd_TopoDS_Shape = shape_
-		var mde = ocgd_MeshDataExtractor.new()
+		var mesher = ocgd_BRepMesh_IncrementalMesh.new()
 		t1 = Time.get_ticks_usec()
-		ret = mde.extract_mesh_data_with_purpose(shape, ocgd_MeshDataExtractor.MESH_PURPOSE_PRESENTATION)
-		print("extract_mesh_data_with_purpose took " + str((Time.get_ticks_usec() - t1) / 1000.0) + "ms and returned " + str(ret))
+		mesher.init_with_shape(shape, 0.01, false, 0.1, true)
+		print("mesher.init_with_shape took " + str((Time.get_ticks_usec() - t1) / 1000.0) + "ms and returned ?")
 		var exporter = ocgd_STLExporter.new()
 		t1 = Time.get_ticks_usec()
 		ret = exporter.can_export_shape(shape)

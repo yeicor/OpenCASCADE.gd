@@ -7,6 +7,7 @@
  */
 
 #include "ocgd_AdvancedMeshExporter.hxx"
+#include "ocgd_EnhancedNormals.hxx"
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -94,7 +95,7 @@ void ocgd_AdvancedMeshExporter::_bind_methods() {
     ClassDB::bind_method(D_METHOD("export_shape", "shape", "file_path"), &ocgd_AdvancedMeshExporter::export_shape);
     ClassDB::bind_method(D_METHOD("export_shapes", "shapes", "colors", "file_path"), &ocgd_AdvancedMeshExporter::export_shapes);
     ClassDB::bind_method(D_METHOD("export_shape_with_colors", "shape", "face_colors", "file_path"), &ocgd_AdvancedMeshExporter::export_shape_with_colors);
-    ClassDB::bind_method(D_METHOD("extract_mesh_data", "shape"), &ocgd_AdvancedMeshExporter::extract_mesh_data);
+    ClassDB::bind_method(D_METHOD("extract_mesh_data", "shape", "compute_normals"), &ocgd_AdvancedMeshExporter::extract_mesh_data, DEFVAL(true));
     ClassDB::bind_method(D_METHOD("extract_colored_mesh_data", "shape"), &ocgd_AdvancedMeshExporter::extract_colored_mesh_data);
 
     // Validation and information
@@ -109,7 +110,7 @@ void ocgd_AdvancedMeshExporter::_bind_methods() {
     ClassDB::bind_method(D_METHOD("clear_error"), &ocgd_AdvancedMeshExporter::clear_error);
 
     // Utility methods
-    ClassDB::bind_method(D_METHOD("triangulate_shape", "shape"), &ocgd_AdvancedMeshExporter::triangulate_shape);
+    ClassDB::bind_method(D_METHOD("triangulate_shape", "shape", "compute_normals"), &ocgd_AdvancedMeshExporter::triangulate_shape, DEFVAL(true));
     ClassDB::bind_method(D_METHOD("get_mesh_statistics", "shape"), &ocgd_AdvancedMeshExporter::get_mesh_statistics);
     ClassDB::bind_method(D_METHOD("optimize_mesh_data", "mesh_data"), &ocgd_AdvancedMeshExporter::optimize_mesh_data);
 }
@@ -266,20 +267,40 @@ double ocgd_AdvancedMeshExporter::get_vertex_tolerance() const {
 
 // Main export methods
 bool ocgd_AdvancedMeshExporter::export_shape(const Ref<ocgd_TopoDS_Shape>& shape, const String& file_path) {
-    if (shape.is_null()) {
-        set_error("Shape is null");
-        return false;
-    }
-
-    clear_error();
-    const TopoDS_Shape& occt_shape = shape->get_occt_shape();
-
-    // Ensure triangulation
-    if (!triangulate_shape(shape)) {
-        return false;
-    }
-
     try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot export - shape reference is null");
+            set_error("Shape reference is null");
+            return false;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot export - shape is null");
+            set_error("Shape is null");
+            return false;
+        }
+
+        if (file_path.is_empty()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot export - file path is empty");
+            set_error("File path is empty");
+            return false;
+        }
+
+        clear_error();
+        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot export - OpenCASCADE shape is null");
+            set_error("OpenCASCADE shape is null");
+            return false;
+        }
+
+        // Ensure triangulation
+        if (!triangulate_shape(shape)) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Failed to triangulate shape for export");
+            return false;
+        }
+
         switch (_format) {
             case FORMAT_PLY:
                 return export_ply(occt_shape, file_path);
@@ -289,11 +310,18 @@ bool ocgd_AdvancedMeshExporter::export_shape(const Ref<ocgd_TopoDS_Shape>& shape
             case FORMAT_STL_BINARY:
                 return export_stl(occt_shape, file_path);
             default:
+                UtilityFunctions::printerr("AdvancedMeshExporter: Unsupported export format: " + String::num(_format));
                 set_error("Unsupported export format");
                 return false;
         }
+
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("AdvancedMeshExporter: Exception exporting shape - " + String(e.GetMessageString()));
         set_error(String("Export failed: ") + String(e.GetMessageString()));
+        return false;
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("AdvancedMeshExporter: Exception exporting shape - " + String(e.what()));
+        set_error(String("Export failed: ") + String(e.what()));
         return false;
     }
 }
@@ -327,101 +355,193 @@ bool ocgd_AdvancedMeshExporter::export_shape_with_colors(const Ref<ocgd_TopoDS_S
     return result;
 }
 
-Dictionary ocgd_AdvancedMeshExporter::extract_mesh_data(const Ref<ocgd_TopoDS_Shape>& shape) {
+Dictionary ocgd_AdvancedMeshExporter::extract_mesh_data(const Ref<ocgd_TopoDS_Shape>& shape, bool compute_normals) {
     Dictionary result;
 
-    if (shape.is_null()) {
-        set_error("Shape is null");
-        return result;
-    }
-
-    clear_error();
-    const TopoDS_Shape& occt_shape = shape->get_occt_shape();
-
-    // Ensure triangulation
-    if (!triangulate_shape(shape)) {
-        return result;
-    }
-
-    PackedVector3Array vertices;
-    PackedInt32Array indices;
-    PackedVector3Array normals;
-
     try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot extract mesh data - shape reference is null");
+            set_error("Shape reference is null");
+            return result;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot extract mesh data - shape is null");
+            set_error("Shape is null");
+            return result;
+        }
+
+        clear_error();
+        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot extract mesh data - OpenCASCADE shape is null");
+            set_error("OpenCASCADE shape is null");
+            return result;
+        }
+
+        // Ensure triangulation
+        if (!triangulate_shape(shape, compute_normals)) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Failed to triangulate shape for mesh extraction");
+            return result;
+        }
+
+        PackedVector3Array vertices;
+        PackedInt32Array indices;
+        PackedVector3Array normals;
+
         int vertex_offset = 0;
 
         TopExp_Explorer face_explorer(occt_shape, TopAbs_FACE);
         while (face_explorer.More()) {
-            const TopoDS_Face& face = TopoDS::Face(face_explorer.Current());
+            try {
+                const TopoDS_Face& face = TopoDS::Face(face_explorer.Current());
 
-            TopLoc_Location location;
-            Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(face, location);
+                TopLoc_Location location;
+                Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(face, location);
 
-            if (!triangulation.IsNull()) {
-                const Standard_Integer nb_nodes = triangulation->NbNodes();
-                const Standard_Integer nb_triangles = triangulation->NbTriangles();
+                if (!triangulation.IsNull()) {
+                    // Use validation but continue even if not perfect
+                    bool is_valid = validate_triangulation(triangulation);
+                    if (!is_valid) {
+                        UtilityFunctions::printerr("AdvancedMeshExporter: Triangulation may have issues but attempting to process");
+                    }
+                    const Standard_Integer nb_nodes = triangulation->NbNodes();
+                    const Standard_Integer nb_triangles = triangulation->NbTriangles();
 
-                // Extract vertices
-                const Poly_ArrayOfNodes& nodes = triangulation->InternalNodes();
-                for (Standard_Integer i = 1; i <= nb_nodes; i++) {
-                    gp_Pnt point = nodes.Value(i);
-
-                    // Apply location transformation if present
-                    if (!location.IsIdentity()) {
-                        point.Transform(location.Transformation());
+                    if (nb_nodes <= 0) {
+                        UtilityFunctions::printerr("AdvancedMeshExporter: Invalid triangulation - no nodes found");
+                        continue;
                     }
 
-                    vertices.append(Vector3(
-                        static_cast<float>(point.X()),
-                        static_cast<float>(point.Y()),
-                        static_cast<float>(point.Z())
-                    ));
-                }
-
-                // Extract triangles
-                const Poly_Array1OfTriangle& triangles = triangulation->InternalTriangles();
-                Standard_Boolean is_reversed = (face.Orientation() == TopAbs_REVERSED);
-
-                for (Standard_Integer i = 1; i <= nb_triangles; i++) {
-                    const Poly_Triangle& triangle = triangles.Value(i);
-                    Standard_Integer n1, n2, n3;
-                    triangle.Get(n1, n2, n3);
-
-                    // Adjust for 0-based indexing and apply vertex offset
-                    if (is_reversed) {
-                        indices.append(vertex_offset + n1 - 1);
-                        indices.append(vertex_offset + n3 - 1);
-                        indices.append(vertex_offset + n2 - 1);
-                    } else {
-                        indices.append(vertex_offset + n1 - 1);
-                        indices.append(vertex_offset + n2 - 1);
-                        indices.append(vertex_offset + n3 - 1);
+                    if (nb_triangles <= 0) {
+                        UtilityFunctions::printerr("AdvancedMeshExporter: Invalid triangulation - no triangles found");
+                        continue;
                     }
-                }
 
-                // Extract normals if available
-                if (_export_normals && triangulation->HasNormals()) {
-                    const NCollection_Array1<gp_Vec3f>& norms = triangulation->InternalNormals();
+                    // Extract vertices using indexed accessors
                     for (Standard_Integer i = 1; i <= nb_nodes; i++) {
-                        const gp_Vec3f& norm = norms.Value(i);
-                        Vector3 normal(norm.x(), norm.y(), norm.z());
+                        try {
+                            gp_Pnt point = triangulation->Node(i);
 
-                        // Apply location transformation to normals if present
-                        if (!location.IsIdentity()) {
-                            gp_Vec normal_vec(normal.x, normal.y, normal.z);
-                            normal_vec.Transform(location.Transformation());
-                            normal = Vector3(
-                                static_cast<float>(normal_vec.X()),
-                                static_cast<float>(normal_vec.Y()),
-                                static_cast<float>(normal_vec.Z())
-                            );
+                            // Apply location transformation if present
+                            if (!location.IsIdentity()) {
+                                point.Transform(location.Transformation());
+                            }
+
+                            vertices.append(Vector3(
+                                static_cast<float>(point.X()),
+                                static_cast<float>(point.Y()),
+                                static_cast<float>(point.Z())
+                            ));
+                        } catch (const Standard_Failure& e) {
+                            UtilityFunctions::printerr("AdvancedMeshExporter: Failed to access node " + String::num(i) + " - " + String(e.GetMessageString()) + ", using default");
+                            vertices.append(Vector3(0, 0, 0));
+                        } catch (const std::exception& e) {
+                            UtilityFunctions::printerr("AdvancedMeshExporter: Failed to access node " + String::num(i) + " - " + String(e.what()) + ", using default");
+                            vertices.append(Vector3(0, 0, 0));
                         }
-
-                        normals.append(normal);
                     }
-                }
 
-                vertex_offset += nb_nodes;
+                    // Extract triangles using indexed accessors
+                    Standard_Boolean is_reversed = (face.Orientation() == TopAbs_REVERSED);
+
+                    for (Standard_Integer i = 1; i <= nb_triangles; i++) {
+                        try {
+                            const Poly_Triangle& triangle = triangulation->Triangle(i);
+                            Standard_Integer n1, n2, n3;
+                            triangle.Get(n1, n2, n3);
+
+                            // Validate triangle node indices but continue processing
+                            if (n1 < 1 || n1 > nb_nodes || n2 < 1 || n2 > nb_nodes || n3 < 1 || n3 > nb_nodes) {
+                                UtilityFunctions::printerr("AdvancedMeshExporter: Invalid triangle node indices - Triangle " + String::num(i) +
+                                                         ": n1=" + String::num(n1) + ", n2=" + String::num(n2) + ", n3=" + String::num(n3) +
+                                                         ", max_nodes=" + String::num(nb_nodes) + ", skipping triangle");
+                                continue;
+                            }
+
+                            // Adjust for 0-based indexing and apply vertex offset
+                            if (is_reversed) {
+                                indices.append(vertex_offset + n1 - 1);
+                                indices.append(vertex_offset + n2 - 1);
+                                indices.append(vertex_offset + n3 - 1);
+                            } else {
+                                indices.append(vertex_offset + n1 - 1);
+                                indices.append(vertex_offset + n3 - 1);
+                                indices.append(vertex_offset + n2 - 1);
+                            }
+                        } catch (const Standard_Failure& e) {
+                            UtilityFunctions::printerr("AdvancedMeshExporter: Failed to access triangle " + String::num(i) + " - " + String(e.GetMessageString()) + ", continuing");
+                        } catch (const std::exception& e) {
+                            UtilityFunctions::printerr("AdvancedMeshExporter: Failed to access triangle " + String::num(i) + " - " + String(e.what()) + ", continuing");
+                        }
+                    }
+
+                    // Extract or compute normals if requested
+                    if (_export_normals) {
+                        if (triangulation->HasNormals()) {
+                            // Extract existing normals
+                            for (Standard_Integer i = 1; i <= nb_nodes; i++) {
+                                try {
+                                    // Get normal using triangulation API
+                                    gp_Dir normal_dir = triangulation->Normal(i);
+                                    Vector3 normal(
+                                        static_cast<float>(normal_dir.X()),
+                                        static_cast<float>(normal_dir.Y()),
+                                        static_cast<float>(normal_dir.Z())
+                                    );
+
+                                    // Apply location transformation to normals if present
+                                    if (!location.IsIdentity()) {
+                                        gp_Vec normal_vec(normal.x, normal.y, normal.z);
+                                        normal_vec.Transform(location.Transformation());
+                                        normal = Vector3(
+                                            static_cast<float>(normal_vec.X()),
+                                            static_cast<float>(normal_vec.Y()),
+                                            static_cast<float>(normal_vec.Z())
+                                        );
+                                    }
+
+                                    normals.append(normal);
+                                } catch (const Standard_Failure& e) {
+                                    UtilityFunctions::printerr("AdvancedMeshExporter: Failed to access normal " + String::num(i) + " - " + String(e.GetMessageString()) + ", using default");
+                                    normals.append(Vector3(0, 0, 1));
+                                } catch (const std::exception& e) {
+                                    UtilityFunctions::printerr("AdvancedMeshExporter: Failed to access normal " + String::num(i) + " - " + String(e.what()) + ", using default");
+                                    normals.append(Vector3(0, 0, 1));
+                                }
+                            }
+                        } else {
+                            // Use enhanced normal computation for missing normals
+                            UtilityFunctions::printerr("AdvancedMeshExporter: Computing normals using enhanced algorithms for face");
+                            
+                            PackedVector3Array face_normals = ocgd_EnhancedNormals::extract_normals_as_vector3_array(face, triangulation, location);
+                            
+                            if (face_normals.size() == nb_nodes) {
+                                // Add computed normals to main normals array
+                                for (int i = 0; i < face_normals.size(); i++) {
+                                    normals.append(face_normals[i]);
+                                }
+                            } else {
+                                UtilityFunctions::printerr("AdvancedMeshExporter: Enhanced normal computation failed, using default normals");
+                                // Fallback to default normals
+                                for (Standard_Integer i = 1; i <= nb_nodes; i++) {
+                                    normals.append(Vector3(0, 0, 1));
+                                }
+                            }
+                        }
+                    }
+
+                    vertex_offset += nb_nodes;
+                } else {
+                    UtilityFunctions::printerr("AdvancedMeshExporter: Face has null or invalid triangulation - skipping");
+                }
+            } catch (const Standard_Failure& e) {
+                UtilityFunctions::printerr("AdvancedMeshExporter: Exception processing face during mesh extraction - " + String(e.GetMessageString()));
+                // Continue with next face
+            } catch (const std::exception& e) {
+                UtilityFunctions::printerr("AdvancedMeshExporter: Exception processing face during mesh extraction - " + String(e.what()));
+                // Continue with next face
             }
 
             face_explorer.Next();
@@ -437,16 +557,22 @@ Dictionary ocgd_AdvancedMeshExporter::extract_mesh_data(const Ref<ocgd_TopoDS_Sh
 
         result["vertices"] = vertices;
         result["indices"] = indices;
+
         if (normals.size() > 0) {
             result["normals"] = normals;
         }
 
+        return result;
+
     } catch (const Standard_Failure& e) {
-        set_error(String("Failed to extract mesh data: ") + String(e.GetMessageString()));
+        UtilityFunctions::printerr("AdvancedMeshExporter: Exception extracting mesh data - " + String(e.GetMessageString()));
+        set_error(String("Mesh extraction failed: ") + String(e.GetMessageString()));
+        return Dictionary();
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("AdvancedMeshExporter: Exception extracting mesh data - " + String(e.what()));
+        set_error(String("Mesh extraction failed: ") + String(e.what()));
         return Dictionary();
     }
-
-    return result;
 }
 
 Dictionary ocgd_AdvancedMeshExporter::extract_colored_mesh_data(const Ref<ocgd_TopoDS_Shape>& shape) {
@@ -478,45 +604,75 @@ Dictionary ocgd_AdvancedMeshExporter::extract_colored_mesh_data(const Ref<ocgd_T
 Dictionary ocgd_AdvancedMeshExporter::validate_shape(const Ref<ocgd_TopoDS_Shape>& shape) const {
     Dictionary result;
 
-    if (shape.is_null()) {
-        result["valid"] = false;
-        result["error"] = "Shape is null";
-        return result;
-    }
-
-    const TopoDS_Shape& occt_shape = shape->get_occt_shape();
-
-    if (occt_shape.IsNull()) {
-        result["valid"] = false;
-        result["error"] = "Shape is empty";
-        return result;
-    }
-
-    // Count faces and check for triangulation
-    int face_count = 0;
-    int triangulated_faces = 0;
-
-    TopExp_Explorer face_explorer(occt_shape, TopAbs_FACE);
-    while (face_explorer.More()) {
-        face_count++;
-
-        const TopoDS_Face& face = TopoDS::Face(face_explorer.Current());
-        TopLoc_Location location;
-        Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(face, location);
-
-        if (!triangulation.IsNull()) {
-            triangulated_faces++;
+    try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot validate shape - shape reference is null");
+            result["valid"] = false;
+            result["error"] = "Shape reference is null";
+            return result;
         }
 
-        face_explorer.Next();
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot validate shape - shape is null");
+            result["valid"] = false;
+            result["error"] = "Shape is null";
+            return result;
+        }
+
+        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot validate shape - OpenCASCADE shape is null");
+            result["valid"] = false;
+            result["error"] = "OpenCASCADE shape is null";
+            return result;
+        }
+
+        // Count faces and check for triangulation
+        int face_count = 0;
+        int triangulated_faces = 0;
+
+        TopExp_Explorer face_explorer(occt_shape, TopAbs_FACE);
+        while (face_explorer.More()) {
+            try {
+                face_count++;
+
+                const TopoDS_Face& face = TopoDS::Face(face_explorer.Current());
+                TopLoc_Location location;
+                Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(face, location);
+
+                if (!triangulation.IsNull()) {
+                    triangulated_faces++;
+                }
+            } catch (const Standard_Failure& e) {
+                UtilityFunctions::printerr("AdvancedMeshExporter: Exception processing face during validation - " + String(e.GetMessageString()));
+                // Continue with next face
+            } catch (const std::exception& e) {
+                UtilityFunctions::printerr("AdvancedMeshExporter: Exception processing face during validation - " + String(e.what()));
+                // Continue with next face
+            }
+
+            face_explorer.Next();
+        }
+
+        result["valid"] = (face_count > 0);
+        result["face_count"] = face_count;
+        result["triangulated_faces"] = triangulated_faces;
+        result["needs_triangulation"] = (triangulated_faces < face_count);
+
+        return result;
+
+    } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("AdvancedMeshExporter: Exception validating shape - " + String(e.GetMessageString()));
+        result["valid"] = false;
+        result["error"] = String("Validation failed: ") + String(e.GetMessageString());
+        return result;
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("AdvancedMeshExporter: Exception validating shape - " + String(e.what()));
+        result["valid"] = false;
+        result["error"] = String("Validation failed: ") + String(e.what());
+        return result;
     }
-
-    result["valid"] = (face_count > 0);
-    result["face_count"] = face_count;
-    result["triangulated_faces"] = triangulated_faces;
-    result["needs_triangulation"] = (triangulated_faces < face_count);
-
-    return result;
 }
 
 int ocgd_AdvancedMeshExporter::estimate_file_size(const Ref<ocgd_TopoDS_Shape>& shape) const {
@@ -615,21 +771,146 @@ void ocgd_AdvancedMeshExporter::clear_error() {
 }
 
 // Utility methods
-bool ocgd_AdvancedMeshExporter::triangulate_shape(const Ref<ocgd_TopoDS_Shape>& shape) const {
-    if (shape.is_null()) {
-        return false;
-    }
-
+bool ocgd_AdvancedMeshExporter::triangulate_shape(const Ref<ocgd_TopoDS_Shape>& shape, bool compute_normals) const {
     try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot triangulate - shape reference is null");
+            set_error("Shape reference is null");
+            return false;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot triangulate - shape is null");
+            set_error("Shape is null");
+            return false;
+        }
+
         const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot triangulate - OpenCASCADE shape is null");
+            set_error("OpenCASCADE shape is null");
+            return false;
+        }
 
         BRepMesh_IncrementalMesh mesh(occt_shape, _linear_deflection, _relative_deflection, _angular_deflection);
         mesh.SetParallelDefault(_parallel_processing);
         mesh.Perform();
 
-        return mesh.IsDone();
+        if (!mesh.IsDone()) {
+            UtilityFunctions::printerr("AdvancedMeshExporter: Triangulation operation failed");
+            set_error("Triangulation operation failed");
+            return false;
+        }
+
+        // Compute normals if exporting normals is enabled and compute_normals is true
+        if (_export_normals && compute_normals) {
+            try {
+                UtilityFunctions::printerr("AdvancedMeshExporter: Computing normals for triangulated shape using enhanced algorithms");
+
+                int faces_processed = 0;
+                int faces_with_surface_normals = 0;
+                int faces_with_triangle_normals = 0;
+
+                TopExp_Explorer face_explorer(occt_shape, TopAbs_FACE);
+                while (face_explorer.More()) {
+                    const TopoDS_Face& face = TopoDS::Face(face_explorer.Current());
+                    TopLoc_Location location;
+                    Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(face, location);
+
+                    if (!triangulation.IsNull() && !triangulation->HasNormals()) {
+                        const Standard_Integer nb_nodes = triangulation->NbNodes();
+                        const Standard_Integer nb_triangles = triangulation->NbTriangles();
+
+                        if (nb_nodes > 0 && nb_triangles > 0) {
+                            // Use enhanced normal computation
+                            if (ocgd_EnhancedNormals::compute_and_store_normals(face, triangulation)) {
+                                faces_processed++;
+                                
+                                // Get diagnostic info to track computation method
+                                Dictionary info = ocgd_EnhancedNormals::get_normal_computation_info(face, triangulation);
+                                String method = info.get("computation_method", "unknown");
+                                if (method == "surface_based") {
+                                    faces_with_surface_normals++;
+                                } else if (method == "triangle_based") {
+                                    faces_with_triangle_normals++;
+                                }
+                            } else {
+                                UtilityFunctions::printerr("AdvancedMeshExporter: Failed to compute normals for face, skipping");
+                            }
+                        }
+                    }
+
+                    face_explorer.Next();
+                }
+
+                UtilityFunctions::printerr("AdvancedMeshExporter: Enhanced normal computation completed for " +
+                                         String::num(faces_processed) + " faces (" +
+                                         String::num(faces_with_surface_normals) + " surface-based, " +
+                                         String::num(faces_with_triangle_normals) + " triangle-based)");
+            } catch (const Standard_Failure& e) {
+                UtilityFunctions::printerr("AdvancedMeshExporter: Failed to compute normals - " + String(e.GetMessageString()));
+            } catch (const std::exception& e) {
+                UtilityFunctions::printerr("AdvancedMeshExporter: Failed to compute normals - " + String(e.what()));
+            }
+        }
+
+        return true;
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("AdvancedMeshExporter: Exception during triangulation - " + String(e.GetMessageString()));
+        set_error(String("Triangulation failed: ") + String(e.GetMessageString()));
+        return false;
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("AdvancedMeshExporter: Exception during triangulation - " + String(e.what()));
+        set_error(String("Triangulation failed: ") + String(e.what()));
+        return false;
+    }
+}
+
+bool ocgd_AdvancedMeshExporter::validate_triangulation(const Handle(Poly_Triangulation)& triangulation) const {
+    if (triangulation.IsNull()) {
+        return false;
+    }
+
+    try {
+        const Standard_Integer nb_nodes = triangulation->NbNodes();
+        const Standard_Integer nb_triangles = triangulation->NbTriangles();
+
+        // Basic sanity checks - must have some data
+        if (nb_nodes <= 0 || nb_triangles <= 0) {
+            return false;
+        }
+
+        // Check if we can access basic data using indexed accessors
+        try {
+            // Test access to first and last nodes
+            if (nb_nodes >= 1) {
+                triangulation->Node(1);
+                triangulation->Node(nb_nodes);
+            }
+
+            // Test access to first and last triangles
+            if (nb_triangles >= 1) {
+                triangulation->Triangle(1);
+                triangulation->Triangle(nb_triangles);
+            }
+
+        } catch (const Standard_Failure&) {
+            // If we can't access basic elements, mark as invalid but don't fail processing
+            UtilityFunctions::printerr("AdvancedMeshExporter: Cannot access triangulation elements via indexed accessors");
+            return false;
+        } catch (const std::exception&) {
+            return false;
+        }
+
+        return true;
+
+    } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("AdvancedMeshExporter: Exception validating triangulation - " + String(e.GetMessageString()));
+        return false;
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("AdvancedMeshExporter: Exception validating triangulation - " + String(e.what()));
         return false;
     }
 }

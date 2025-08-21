@@ -297,19 +297,32 @@ bool ocgd_CADFileImporter::get_fix_geometry() const {
 
 // Main import methods
 Ref<ocgd_TopoDS_Shape> ocgd_CADFileImporter::import_file(const String& file_path) {
-    clear_messages();
-    _operation_cancelled = false;
-    update_progress(0, 100);
-
-    if (!initialize_document()) {
-        return Ref<ocgd_TopoDS_Shape>();
-    }
-
-    ImportFormat format = (_format == FORMAT_AUTO) ? detect_format(file_path) : _format;
-
-    bool import_success = false;
-
     try {
+        clear_messages();
+        _operation_cancelled = false;
+        update_progress(0, 100);
+
+        if (file_path.is_empty()) {
+            UtilityFunctions::printerr("CADFileImporter: Cannot import file - file path is empty");
+            set_error("File path is empty");
+            return Ref<ocgd_TopoDS_Shape>();
+        }
+
+        if (!initialize_document()) {
+            UtilityFunctions::printerr("CADFileImporter: Failed to initialize document");
+            return Ref<ocgd_TopoDS_Shape>();
+        }
+
+        ImportFormat format = (_format == FORMAT_AUTO) ? detect_format(file_path) : _format;
+
+        if (format == FORMAT_AUTO) {
+            UtilityFunctions::printerr("CADFileImporter: Could not detect file format for: " + file_path);
+            set_error("Could not detect file format");
+            return Ref<ocgd_TopoDS_Shape>();
+        }
+
+        bool import_success = false;
+
         switch (format) {
             case FORMAT_STEP:
                 import_success = import_step_file(file_path);
@@ -324,27 +337,44 @@ Ref<ocgd_TopoDS_Shape> ocgd_CADFileImporter::import_file(const String& file_path
                 import_success = import_stl_file(file_path);
                 break;
             default:
+                UtilityFunctions::printerr("CADFileImporter: Unsupported file format");
                 set_error("Unsupported file format");
                 return Ref<ocgd_TopoDS_Shape>();
         }
 
         if (!import_success) {
+            UtilityFunctions::printerr("CADFileImporter: Import operation failed for: " + file_path);
             return Ref<ocgd_TopoDS_Shape>();
         }
 
         // Process XCAF document if applicable
         if (format == FORMAT_STEP || format == FORMAT_IGES) {
-            process_xcaf_document();
+            try {
+                process_xcaf_document();
+            } catch (const Standard_Failure& e) {
+                UtilityFunctions::printerr("CADFileImporter: Exception processing XCAF document - " + String(e.GetMessageString()));
+                set_warning("Failed to process document metadata");
+            } catch (const std::exception& e) {
+                UtilityFunctions::printerr("CADFileImporter: Exception processing XCAF document - " + String(e.what()));
+                set_warning("Failed to process document metadata");
+            }
         }
 
         // Get the first shape
         if (_imported_shapes.size() > 0) {
             update_progress(100, 100);
             return _imported_shapes[0];
+        } else {
+            UtilityFunctions::printerr("CADFileImporter: No shapes were imported from file: " + file_path);
+            set_error("No shapes found in file");
         }
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("CADFileImporter: Exception importing file '" + file_path + "' - " + String(e.GetMessageString()));
         set_error(String("Import failed: ") + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("CADFileImporter: Exception importing file '" + file_path + "' - " + String(e.what()));
+        set_error(String("Import failed: ") + String(e.what()));
     }
 
     return Ref<ocgd_TopoDS_Shape>();
@@ -403,55 +433,113 @@ Dictionary ocgd_CADFileImporter::import_file_with_metadata(const String& file_pa
 Array ocgd_CADFileImporter::import_files_batch(const PackedStringArray& file_paths) {
     Array results;
 
-    for (int i = 0; i < file_paths.size(); i++) {
-        if (should_cancel()) {
-            break;
+    try {
+        if (file_paths.is_empty()) {
+            UtilityFunctions::printerr("CADFileImporter: Cannot import batch - file paths array is empty");
+            return results;
         }
 
-        update_progress(i, file_paths.size());
+        for (int i = 0; i < file_paths.size(); i++) {
+            if (should_cancel()) {
+                UtilityFunctions::printerr("CADFileImporter: Batch import cancelled at file " + String::num(i));
+                break;
+            }
 
-        Dictionary file_result;
-        file_result["file_path"] = file_paths[i];
+            update_progress(i, file_paths.size());
 
-        Ref<ocgd_TopoDS_Shape> shape = import_file(file_paths[i]);
-        if (shape.is_valid()) {
-            file_result["shape"] = shape;
-            file_result["success"] = true;
-        } else {
-            file_result["success"] = false;
-            file_result["error"] = get_last_error();
+            Dictionary file_result;
+            file_result["file_path"] = file_paths[i];
+
+            try {
+                Ref<ocgd_TopoDS_Shape> shape = import_file(file_paths[i]);
+                if (shape.is_valid()) {
+                    file_result["shape"] = shape;
+                    file_result["success"] = true;
+                } else {
+                    file_result["success"] = false;
+                    file_result["error"] = get_last_error();
+                }
+            } catch (const Standard_Failure& e) {
+                UtilityFunctions::printerr("CADFileImporter: Exception importing file '" + file_paths[i] + "' - " + String(e.GetMessageString()));
+                file_result["success"] = false;
+                file_result["error"] = String("Import failed: ") + String(e.GetMessageString());
+            } catch (const std::exception& e) {
+                UtilityFunctions::printerr("CADFileImporter: Exception importing file '" + file_paths[i] + "' - " + String(e.what()));
+                file_result["success"] = false;
+                file_result["error"] = String("Import failed: ") + String(e.what());
+            }
+
+            results.append(file_result);
         }
 
-        results.append(file_result);
+        update_progress(file_paths.size(), file_paths.size());
+        return results;
+
+    } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("CADFileImporter: Exception in batch import - " + String(e.GetMessageString()));
+        return Array();
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("CADFileImporter: Exception in batch import - " + String(e.what()));
+        return Array();
     }
-
-    update_progress(file_paths.size(), file_paths.size());
-    return results;
 }
 
 // File information methods
 Dictionary ocgd_CADFileImporter::analyze_file(const String& file_path) {
     Dictionary result;
 
-    result["file_path"] = file_path;
-    result["exists"] = FileAccess::file_exists(file_path);
+    try {
+        if (file_path.is_empty()) {
+            UtilityFunctions::printerr("CADFileImporter: Cannot analyze file - file path is empty");
+            result["error"] = "File path is empty";
+            return result;
+        }
 
-    if (!result["exists"]) {
-        result["error"] = "File does not exist";
+        // Basic file information
+        result["file_path"] = file_path;
+        result["file_exists"] = FileAccess::file_exists(file_path);
+
+        if (!result["file_exists"]) {
+            UtilityFunctions::printerr("CADFileImporter: File does not exist: " + file_path);
+            result["error"] = "File does not exist";
+            return result;
+        }
+
+        // Try to detect format
+        ImportFormat format = detect_format(file_path);
+        result["detected_format"] = format;
+
+        if (format == FORMAT_AUTO) {
+            UtilityFunctions::printerr("CADFileImporter: Could not detect format for file: " + file_path);
+            result["warning"] = "Could not detect file format";
+        }
+
+        // Try to get file size
+        try {
+            Ref<FileAccess> file = FileAccess::open(file_path, FileAccess::READ);
+            if (file.is_valid()) {
+                result["file_size"] = file->get_length();
+                file->close();
+            } else {
+                UtilityFunctions::printerr("CADFileImporter: Could not open file for size analysis: " + file_path);
+                result["warning"] = "Could not read file size";
+            }
+        } catch (const std::exception& e) {
+            UtilityFunctions::printerr("CADFileImporter: Exception reading file size - " + String(e.what()));
+            result["warning"] = "Error reading file size";
+        }
+
+        return result;
+
+    } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("CADFileImporter: Exception analyzing file '" + file_path + "' - " + String(e.GetMessageString()));
+        result["error"] = String("Analysis failed: ") + String(e.GetMessageString());
+        return result;
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("CADFileImporter: Exception analyzing file '" + file_path + "' - " + String(e.what()));
+        result["error"] = String("Analysis failed: ") + String(e.what());
         return result;
     }
-
-    result["format"] = detect_format(file_path);
-    result["extension"] = get_file_extension(file_path);
-
-    // Get file size
-    Ref<FileAccess> file = FileAccess::open(file_path, FileAccess::READ);
-    if (file.is_valid()) {
-        result["file_size"] = file->get_length();
-        file->close();
-    }
-
-    return result;
 }
 
 Dictionary ocgd_CADFileImporter::validate_file(const String& file_path) {

@@ -60,7 +60,9 @@ Ref<ocgd_TopoDS_Shape> ocgd_PrimitiveShapes::create_box(double width, double hei
             return wrap_shape(box_maker.Shape());
         }
     } catch (const Standard_Failure& e) {
-        UtilityFunctions::printerr("PrimitiveShapes: Failed to create box");
+        UtilityFunctions::printerr("PrimitiveShapes: Failed to create box - " + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("PrimitiveShapes: Failed to create box - " + String(e.what()));
     }
 
     return Ref<ocgd_TopoDS_Shape>();
@@ -68,17 +70,27 @@ Ref<ocgd_TopoDS_Shape> ocgd_PrimitiveShapes::create_box(double width, double hei
 
 Ref<ocgd_TopoDS_Shape> ocgd_PrimitiveShapes::create_box_from_corners(const Vector3& corner1, const Vector3& corner2) {
     try {
-        gp_Pnt pt1 = vector3_to_point(corner1);
-        gp_Pnt pt2 = vector3_to_point(corner2);
+        // Validate that corners define a valid box
+        if (corner1.x == corner2.x || corner1.y == corner2.y || corner1.z == corner2.z) {
+            UtilityFunctions::printerr("PrimitiveShapes: Box corners must define a 3D volume");
+            return Ref<ocgd_TopoDS_Shape>();
+        }
 
-        BRepPrimAPI_MakeBox box_maker(pt1, pt2);
+        gp_Pnt gp_corner1(corner1.x, corner1.y, corner1.z);
+        gp_Pnt gp_corner2(corner2.x, corner2.y, corner2.z);
+
+        BRepPrimAPI_MakeBox box_maker(gp_corner1, gp_corner2);
         box_maker.Build();
 
         if (box_maker.IsDone()) {
             return wrap_shape(box_maker.Shape());
+        } else {
+            UtilityFunctions::printerr("PrimitiveShapes: Box creation failed");
         }
     } catch (const Standard_Failure& e) {
-        UtilityFunctions::printerr("PrimitiveShapes: Failed to create box from corners");
+        UtilityFunctions::printerr("PrimitiveShapes: Failed to create box from corners - " + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("PrimitiveShapes: Failed to create box from corners - " + String(e.what()));
     }
 
     return Ref<ocgd_TopoDS_Shape>();
@@ -86,21 +98,25 @@ Ref<ocgd_TopoDS_Shape> ocgd_PrimitiveShapes::create_box_from_corners(const Vecto
 
 Ref<ocgd_TopoDS_Shape> ocgd_PrimitiveShapes::create_sphere(double radius, const Vector3& center) {
     if (radius <= 0) {
-        UtilityFunctions::printerr("PrimitiveShapes: Sphere radius must be positive");
+        UtilityFunctions::printerr("PrimitiveShapes: Sphere radius must be positive, got: " + String::num(radius));
         return Ref<ocgd_TopoDS_Shape>();
     }
 
     try {
-        gp_Pnt sphere_center = vector3_to_point(center);
+        gp_Pnt gp_center(center.x, center.y, center.z);
 
-        BRepPrimAPI_MakeSphere sphere_maker(sphere_center, radius);
+        BRepPrimAPI_MakeSphere sphere_maker(gp_center, radius);
         sphere_maker.Build();
 
         if (sphere_maker.IsDone()) {
             return wrap_shape(sphere_maker.Shape());
+        } else {
+            UtilityFunctions::printerr("PrimitiveShapes: Sphere creation failed");
         }
     } catch (const Standard_Failure& e) {
-        UtilityFunctions::printerr("PrimitiveShapes: Failed to create sphere");
+        UtilityFunctions::printerr("PrimitiveShapes: Failed to create sphere - " + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("PrimitiveShapes: Failed to create sphere - " + String(e.what()));
     }
 
     return Ref<ocgd_TopoDS_Shape>();
@@ -108,29 +124,48 @@ Ref<ocgd_TopoDS_Shape> ocgd_PrimitiveShapes::create_sphere(double radius, const 
 
 Ref<ocgd_TopoDS_Shape> ocgd_PrimitiveShapes::create_sphere_sector(double radius, double angle_u, double angle_v, const Vector3& center) {
     if (radius <= 0) {
-        UtilityFunctions::printerr("PrimitiveShapes: Sphere radius must be positive");
+        UtilityFunctions::printerr("PrimitiveShapes: Sphere radius must be positive, got: " + String::num(radius));
+        return Ref<ocgd_TopoDS_Shape>();
+    }
+
+    if (angle_u <= 0 || angle_u > 2 * M_PI || angle_v <= 0 || angle_v > M_PI) {
+        UtilityFunctions::printerr("PrimitiveShapes: Invalid sphere sector angles - angle_u must be in (0, 2π], angle_v must be in (0, π]");
         return Ref<ocgd_TopoDS_Shape>();
     }
 
     try {
-        gp_Pnt sphere_center = vector3_to_point(center);
+        gp_Pnt gp_center(center.x, center.y, center.z);
 
-        BRepPrimAPI_MakeSphere sphere_maker(sphere_center, radius, angle_u, angle_v);
+        BRepPrimAPI_MakeSphere sphere_maker(gp_center, radius, angle_u, angle_v);
         sphere_maker.Build();
 
         if (sphere_maker.IsDone()) {
             return wrap_shape(sphere_maker.Shape());
+        } else {
+            UtilityFunctions::printerr("PrimitiveShapes: Sphere sector creation failed");
         }
     } catch (const Standard_Failure& e) {
-        UtilityFunctions::printerr("PrimitiveShapes: Failed to create sphere sector");
+        UtilityFunctions::printerr("PrimitiveShapes: Failed to create sphere sector - " + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("PrimitiveShapes: Failed to create sphere sector - " + String(e.what()));
     }
 
     return Ref<ocgd_TopoDS_Shape>();
 }
 
 Ref<ocgd_TopoDS_Shape> ocgd_PrimitiveShapes::create_cylinder(double radius, double height, const Vector3& center, const Vector3& axis) {
-    if (radius <= 0 || height <= 0) {
-        UtilityFunctions::printerr("PrimitiveShapes: Cylinder radius and height must be positive");
+    if (radius <= 0) {
+        UtilityFunctions::printerr("PrimitiveShapes: Cylinder radius must be positive, got: " + String::num(radius));
+        return Ref<ocgd_TopoDS_Shape>();
+    }
+
+    if (height <= 0) {
+        UtilityFunctions::printerr("PrimitiveShapes: Cylinder height must be positive, got: " + String::num(height));
+        return Ref<ocgd_TopoDS_Shape>();
+    }
+
+    if (axis.length() < 1e-6) {
+        UtilityFunctions::printerr("PrimitiveShapes: Cylinder axis vector must have non-zero length");
         return Ref<ocgd_TopoDS_Shape>();
     }
 
@@ -142,9 +177,13 @@ Ref<ocgd_TopoDS_Shape> ocgd_PrimitiveShapes::create_cylinder(double radius, doub
 
         if (cylinder_maker.IsDone()) {
             return wrap_shape(cylinder_maker.Shape());
+        } else {
+            UtilityFunctions::printerr("PrimitiveShapes: Cylinder creation failed");
         }
     } catch (const Standard_Failure& e) {
-        UtilityFunctions::printerr("PrimitiveShapes: Failed to create cylinder");
+        UtilityFunctions::printerr("PrimitiveShapes: Failed to create cylinder - " + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("PrimitiveShapes: Failed to create cylinder - " + String(e.what()));
     }
 
     return Ref<ocgd_TopoDS_Shape>();

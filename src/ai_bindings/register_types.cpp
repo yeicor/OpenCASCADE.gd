@@ -24,6 +24,7 @@
 #include "ocgd_AdvancedMeshExporter.hxx"
 #include "ocgd_TopologyAnalyzer.hxx"
 #include "ocgd_CADFileImporter.hxx"
+#include "ocgd_SurfaceUtils.hxx"
 
 using namespace godot;
 
@@ -46,6 +47,7 @@ void ocgd_initialize_module(ModuleInitializationLevel p_level) {
     GDREGISTER_CLASS(ocgd_AdvancedMeshExporter);
     GDREGISTER_CLASS(ocgd_TopologyAnalyzer);
     GDREGISTER_CLASS(ocgd_CADFileImporter);
+    GDREGISTER_CLASS(ocgd_SurfaceUtils);
 }
 
 void ocgd_uninitialize_module(ModuleInitializationLevel p_level) {

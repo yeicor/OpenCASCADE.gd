@@ -45,6 +45,10 @@
 #include <opencascade/Poly_MeshPurpose.hxx>
 #include <opencascade/TopLoc_Location.hxx>
 #include <opencascade/gp_Trsf.hxx>
+#include <opencascade/BRepMesh_IncrementalMesh.hxx>
+#include <opencascade/TopExp_Explorer.hxx>
+
+#include <opencascade/gp_Vec3f.hxx>
 
 #include "ocgd_TopoDS_Shape.hxx"
 
@@ -109,11 +113,11 @@ public:
 
     //! Extract complete mesh data from a shape
     //! Returns a Dictionary with keys: "vertices", "triangles", "normals", "uvs"
-    Dictionary extract_mesh_data(const Ref<ocgd_TopoDS_Shape>& shape);
+    Dictionary extract_mesh_data(const Ref<ocgd_TopoDS_Shape>& shape, double linear_deflection = 0.1, double angular_deflection = 0.1, bool compute_normals = true);
 
     //! Extract mesh data from a specific face
     //! Returns a Dictionary with mesh data for the single face
-    Dictionary extract_face_data(const Ref<ocgd_TopoDS_Shape>& face);
+    Dictionary extract_face_data(const Ref<ocgd_TopoDS_Shape>& face, double linear_deflection = 0.1, double angular_deflection = 0.1, bool compute_normals = true);
 
     //! Extract just vertices from a shape
     PackedVector3Array extract_vertices(const Ref<ocgd_TopoDS_Shape>& shape);
@@ -129,7 +133,7 @@ public:
 
     //! Extract mesh data per face (useful for multi-material meshes)
     //! Returns an Array of Dictionaries, one per face
-    Array extract_per_face_data(const Ref<ocgd_TopoDS_Shape>& shape);
+    Array extract_per_face_data(const Ref<ocgd_TopoDS_Shape>& shape, double linear_deflection = 0.1, double angular_deflection = 0.1, bool compute_normals = true);
 
     //! Check if a shape has triangulation data
     bool has_triangulation(const Ref<ocgd_TopoDS_Shape>& shape) const;
@@ -148,6 +152,22 @@ public:
     //! Extract surface area from triangulation
     double get_triangulated_area(const Ref<ocgd_TopoDS_Shape>& shape) const;
 
+    //! Get detailed triangulation information for debugging
+    //! Returns Dictionary with detailed info about each face's triangulation
+    Dictionary get_detailed_triangulation_info(const Ref<ocgd_TopoDS_Shape>& shape) const;
+
+    //! Debug validation method that provides detailed information about validation failures
+    //! Returns Dictionary with detailed validation results for each face
+    Dictionary debug_validate_triangulation(const Ref<ocgd_TopoDS_Shape>& shape) const;
+
+    //! Ensure shape has triangulation, applying it if needed
+    //! Returns true if triangulation is available after the operation
+    bool ensure_triangulation(const Ref<ocgd_TopoDS_Shape>& shape, double linear_deflection, double angular_deflection, bool compute_normals = false) const;
+
+    //! Compute normals for existing triangulation
+    //! Returns true if normals were computed successfully
+    bool compute_normals(const Ref<ocgd_TopoDS_Shape>& shape) const;
+
     //! Mesh purpose enumeration for different triangulation types
     enum MeshPurpose {
         MESH_PURPOSE_NONE = Poly_MeshPurpose_NONE,
@@ -160,25 +180,29 @@ public:
     };
 
     //! Extract mesh data with specific mesh purpose
-    Dictionary extract_mesh_data_with_purpose(const Ref<ocgd_TopoDS_Shape>& shape, int purpose);
+    Dictionary extract_mesh_data_with_purpose(const Ref<ocgd_TopoDS_Shape>& shape, double linear_deflection = 0.1, double angular_deflection = 0.1, int purpose = 0, bool compute_normals = true);
 
 private:
     //! Internal helper to extract triangulation from a single face
     Handle(Poly_Triangulation) get_face_triangulation(const TopoDS_Face& face, int purpose = Poly_MeshPurpose_NONE) const;
 
+    //! Internal helper to validate triangulation data integrity
+    bool validate_triangulation(const Handle(Poly_Triangulation)& triangulation) const;
+
     //! Internal helper to convert OpenCASCADE triangulation to Godot arrays
-    Dictionary convert_triangulation_to_dict(const Handle(Poly_Triangulation)& triangulation, 
-                                            const TopLoc_Location& location = TopLoc_Location()) const;
+    Dictionary convert_triangulation_to_dict(const Handle(Poly_Triangulation)& triangulation,
+                                            const TopLoc_Location& location = TopLoc_Location(),
+                                            const TopoDS_Face* face = nullptr) const;
 
     //! Internal helper to apply transformation to vertices
     void apply_transformation(PackedVector3Array& vertices, const gp_Trsf& transformation) const;
 
     //! Internal helper to merge duplicate vertices
-    void merge_duplicate_vertices(PackedVector3Array& vertices, PackedInt32Array& triangles, 
+    void merge_duplicate_vertices(PackedVector3Array& vertices, PackedInt32Array& triangles,
                                  PackedVector3Array& normals, PackedVector2Array& uvs) const;
 
     //! Internal helper to compute surface area from triangulation
-    double compute_triangulated_area(const Handle(Poly_Triangulation)& triangulation, 
+    double compute_triangulated_area(const Handle(Poly_Triangulation)& triangulation,
                                    const TopLoc_Location& location = TopLoc_Location()) const;
 };
 

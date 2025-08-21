@@ -69,7 +69,7 @@
 			<param index="3" name="angular_deflection" type="float" default="0.5" />
 			<param index="4" name="is_in_parallel" type="bool" default="false" />
 			<description>
-				Constructor that automatically calls perform method. If is_relative is true, deflection used for discretization of each edge will be linear_deflection * size of edge. Deflection used for the faces will be the maximum deflection of their edges. If is_in_parallel is true, shape will be meshed in parallel.
+				Constructor. If is_relative is true, deflection used for discretization of each edge will be linear_deflection * size of edge. Deflection used for the faces will be the maximum deflection of their edges. If is_in_parallel is true, shape will be meshed in parallel.
 			</description>
 		</method>
 		<method name="is_modified" qualifiers="const">

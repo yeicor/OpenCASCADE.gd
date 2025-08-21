@@ -85,49 +85,106 @@ bool ocgd_ShapeAnalyzer::get_high_precision_mode() const {
 Dictionary ocgd_ShapeAnalyzer::compute_volume_properties(const Ref<ocgd_TopoDS_Shape>& shape) {
     Dictionary result;
 
-    if (shape.is_null() || shape->is_null()) {
-        UtilityFunctions::printerr("ShapeAnalyzer: Cannot compute volume properties of null shape");
+    try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("ShapeAnalyzer: Cannot compute volume properties - shape reference is null");
+            return result;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("ShapeAnalyzer: Cannot compute volume properties - shape is null");
+            return result;
+        }
+
+        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("ShapeAnalyzer: Cannot compute volume properties - OpenCASCADE shape is null");
+            return result;
+        }
+
+        GProp_GProps volume_props;
+        BRepGProp::VolumeProperties(occt_shape, volume_props, _use_triangulation);
+
+        return gprops_to_dictionary(volume_props);
+
+    } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("ShapeAnalyzer: Exception computing volume properties - " + String(e.GetMessageString()));
+        return result;
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("ShapeAnalyzer: Exception computing volume properties - " + String(e.what()));
         return result;
     }
-
-    const TopoDS_Shape& occt_shape = shape->get_occt_shape();
-    GProp_GProps volume_props;
-
-    BRepGProp::VolumeProperties(occt_shape, volume_props, _use_triangulation);
-
-    return gprops_to_dictionary(volume_props);
 }
 
 Dictionary ocgd_ShapeAnalyzer::compute_surface_properties(const Ref<ocgd_TopoDS_Shape>& shape) {
     Dictionary result;
 
-    if (shape.is_null() || shape->is_null()) {
-        UtilityFunctions::printerr("ShapeAnalyzer: Cannot compute surface properties of null shape");
+    try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("ShapeAnalyzer: Cannot compute surface properties - shape reference is null");
+            return result;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("ShapeAnalyzer: Cannot compute surface properties - shape is null");
+            return result;
+        }
+
+        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("ShapeAnalyzer: Cannot compute surface properties - OpenCASCADE shape is null");
+            return result;
+        }
+
+        GProp_GProps surface_props;
+        BRepGProp::SurfaceProperties(occt_shape, surface_props, _use_triangulation, _skip_shared_edges);
+
+        return gprops_to_dictionary(surface_props);
+
+    } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("ShapeAnalyzer: Exception computing surface properties - " + String(e.GetMessageString()));
+        return result;
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("ShapeAnalyzer: Exception computing surface properties - " + String(e.what()));
         return result;
     }
-
-    const TopoDS_Shape& occt_shape = shape->get_occt_shape();
-    GProp_GProps surface_props;
-
-    BRepGProp::SurfaceProperties(occt_shape, surface_props, _skip_shared_edges, _use_triangulation);
-
-    return gprops_to_dictionary(surface_props);
 }
 
 Dictionary ocgd_ShapeAnalyzer::compute_linear_properties(const Ref<ocgd_TopoDS_Shape>& shape) {
     Dictionary result;
 
-    if (shape.is_null() || shape->is_null()) {
-        UtilityFunctions::printerr("ShapeAnalyzer: Cannot compute linear properties of null shape");
+    try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("ShapeAnalyzer: Cannot compute linear properties - shape reference is null");
+            return result;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("ShapeAnalyzer: Cannot compute linear properties - shape is null");
+            return result;
+        }
+
+        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("ShapeAnalyzer: Cannot compute linear properties - OpenCASCADE shape is null");
+            return result;
+        }
+
+        GProp_GProps linear_props;
+        BRepGProp::LinearProperties(occt_shape, linear_props, _use_triangulation, _skip_shared_edges);
+
+        return gprops_to_dictionary(linear_props);
+
+    } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("ShapeAnalyzer: Exception computing linear properties - " + String(e.GetMessageString()));
+        return result;
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("ShapeAnalyzer: Exception computing linear properties - " + String(e.what()));
         return result;
     }
-
-    const TopoDS_Shape& occt_shape = shape->get_occt_shape();
-    GProp_GProps linear_props;
-
-    BRepGProp::LinearProperties(occt_shape, linear_props, _skip_shared_edges, _use_triangulation);
-
-    return gprops_to_dictionary(linear_props);
 }
 
 double ocgd_ShapeAnalyzer::get_volume(const Ref<ocgd_TopoDS_Shape>& shape) {

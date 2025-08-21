@@ -14,6 +14,7 @@
 #include <opencascade/GProp_PrincipalProps.hxx>
 #include <opencascade/BRepTools.hxx>
 #include <opencascade/BRep_Builder.hxx>
+#include <opencascade/BRepBuilderAPI_MakeVertex.hxx>
 
 #include <opencascade/TopoDS.hxx>
 #include <opencascade/TopExp.hxx>
@@ -298,7 +299,12 @@ Dictionary ocgd_TopologyAnalyzer::analyze_shape(const Ref<ocgd_TopoDS_Shape>& sh
         _cache_valid = true;
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception analyzing shape - " + String(e.GetMessageString()));
         set_error(String("Analysis failed: ") + String(e.GetMessageString()));
+        return Dictionary();
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception analyzing shape - " + String(e.what()));
+        set_error(String("Analysis failed: ") + String(e.what()));
         return Dictionary();
     }
 
@@ -306,23 +312,49 @@ Dictionary ocgd_TopologyAnalyzer::analyze_shape(const Ref<ocgd_TopoDS_Shape>& sh
 }
 
 Dictionary ocgd_TopologyAnalyzer::get_topology_summary(const Ref<ocgd_TopoDS_Shape>& shape) {
-    if (shape.is_null()) {
+    try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot get topology summary - shape reference is null");
+            return Dictionary();
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot get topology summary - shape is null");
+            return Dictionary();
+        }
+
+        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+        return count_topology_elements(occt_shape);
+        
+    } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception getting topology summary - " + String(e.GetMessageString()));
+        return Dictionary();
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception getting topology summary - " + String(e.what()));
         return Dictionary();
     }
-
-    const TopoDS_Shape& occt_shape = shape->get_occt_shape();
-    return count_topology_elements(occt_shape);
 }
 
 Dictionary ocgd_TopologyAnalyzer::analyze_geometric_properties(const Ref<ocgd_TopoDS_Shape>& shape) {
     Dictionary result;
 
-    if (shape.is_null()) {
-        return result;
-    }
-
     try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze geometric properties - shape reference is null");
+            return result;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze geometric properties - shape is null");
+            return result;
+        }
+
         const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze geometric properties - OpenCASCADE shape is null");
+            return result;
+        }
 
         // Volume properties
         GProp_GProps volume_props;
@@ -349,7 +381,11 @@ Dictionary ocgd_TopologyAnalyzer::analyze_geometric_properties(const Ref<ocgd_To
         result["total_edge_length"] = linear_props.Mass();
 
     } catch (const Standard_Failure& e) {
-        set_error(String("Geometric analysis failed: ") + String(e.GetMessageString()));
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception analyzing geometric properties - " + String(e.GetMessageString()));
+        set_error(String("Geometric properties analysis failed: ") + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception analyzing geometric properties - " + String(e.what()));
+        set_error(String("Geometric properties analysis failed: ") + String(e.what()));
     }
 
     return result;
@@ -358,12 +394,28 @@ Dictionary ocgd_TopologyAnalyzer::analyze_geometric_properties(const Ref<ocgd_To
 Dictionary ocgd_TopologyAnalyzer::analyze_mass_properties(const Ref<ocgd_TopoDS_Shape>& shape, double density) {
     Dictionary result;
 
-    if (shape.is_null()) {
-        return result;
-    }
-
     try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze mass properties - shape reference is null");
+            return result;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze mass properties - shape is null");
+            return result;
+        }
+
+        if (density <= 0.0) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze mass properties - density must be positive, got: " + String::num(density));
+            return result;
+        }
+
         const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze mass properties - OpenCASCADE shape is null");
+            return result;
+        }
 
         GProp_GProps props;
         BRepGProp::VolumeProperties(occt_shape, props);
@@ -407,7 +459,11 @@ Dictionary ocgd_TopologyAnalyzer::analyze_mass_properties(const Ref<ocgd_TopoDS_
         }
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception analyzing mass properties - " + String(e.GetMessageString()));
         set_error(String("Mass properties analysis failed: ") + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception analyzing mass properties - " + String(e.what()));
+        set_error(String("Mass properties analysis failed: ") + String(e.what()));
     }
 
     return result;
@@ -416,12 +472,23 @@ Dictionary ocgd_TopologyAnalyzer::analyze_mass_properties(const Ref<ocgd_TopoDS_
 Dictionary ocgd_TopologyAnalyzer::get_bounding_info(const Ref<ocgd_TopoDS_Shape>& shape) {
     Dictionary result;
 
-    if (shape.is_null()) {
-        return result;
-    }
-
     try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot get bounding info - shape reference is null");
+            return result;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot get bounding info - shape is null");
+            return result;
+        }
+
         const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot get bounding info - OpenCASCADE shape is null");
+            return result;
+        }
 
         Bnd_Box bbox;
         BRepBndLib::Add(occt_shape, bbox);
@@ -440,65 +507,103 @@ Dictionary ocgd_TopologyAnalyzer::get_bounding_info(const Ref<ocgd_TopoDS_Shape>
         }
 
     } catch (const Standard_Failure& e) {
-        set_error(String("Bounding box calculation failed: ") + String(e.GetMessageString()));
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception getting bounding info - " + String(e.GetMessageString()));
+        set_error(String("Bounding info calculation failed: ") + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception getting bounding info - " + String(e.what()));
+        set_error(String("Bounding info calculation failed: ") + String(e.what()));
     }
 
     return result;
 }
 
 ocgd_TopologyAnalyzer::ShapeClass ocgd_TopologyAnalyzer::classify_shape(const Ref<ocgd_TopoDS_Shape>& shape) {
-    if (shape.is_null()) {
+    try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot classify shape - shape reference is null");
+            return CLASS_UNKNOWN;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot classify shape - shape is null");
+            return CLASS_UNKNOWN;
+        }
+
+        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot classify shape - OpenCASCADE shape is null");
+            return CLASS_UNKNOWN;
+        }
+
+        Dictionary counts = count_topology_elements(occt_shape);
+
+        int solids = counts.get("solids", 0);
+        int shells = counts.get("shells", 0);
+        int faces = counts.get("faces", 0);
+        int wires = counts.get("wires", 0);
+        int edges = counts.get("edges", 0);
+        int vertices = counts.get("vertices", 0);
+
+        if (solids > 1) {
+            return CLASS_ASSEMBLY;
+        } else if (solids == 1) {
+            // Check if it's hollow by analyzing shells
+            if (shells > 1) {
+                return CLASS_HOLLOW_SOLID;
+            } else {
+                return CLASS_SIMPLE_SOLID;
+            }
+        } else if (faces > 0) {
+            if (faces == 1) {
+                return CLASS_SURFACE;
+            } else {
+                return CLASS_SHEET_BODY;
+            }
+        } else if (edges > 0) {
+            if (edges == 1) {
+                return CLASS_WIREFRAME;
+            } else {
+                return CLASS_WIREFRAME;
+            }
+        } else if (vertices > 0) {
+            return CLASS_POINT_CLOUD;
+        }
+
+        return CLASS_UNKNOWN;
+
+    } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception classifying shape - " + String(e.GetMessageString()));
+        set_error(String("Shape classification failed: ") + String(e.GetMessageString()));
+        return CLASS_UNKNOWN;
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception classifying shape - " + String(e.what()));
+        set_error(String("Shape classification failed: ") + String(e.what()));
         return CLASS_UNKNOWN;
     }
-
-    const TopoDS_Shape& occt_shape = shape->get_occt_shape();
-    Dictionary counts = count_topology_elements(occt_shape);
-
-    int solids = counts.get("solids", 0);
-    int shells = counts.get("shells", 0);
-    int faces = counts.get("faces", 0);
-    int wires = counts.get("wires", 0);
-    int edges = counts.get("edges", 0);
-    int vertices = counts.get("vertices", 0);
-
-    if (solids > 1) {
-        return CLASS_ASSEMBLY;
-    } else if (solids == 1) {
-        // Check if it's hollow by analyzing shells
-        if (shells > 1) {
-            return CLASS_HOLLOW_SOLID;
-        } else {
-            return CLASS_SIMPLE_SOLID;
-        }
-    } else if (faces > 0) {
-        if (faces == 1) {
-            return CLASS_SURFACE;
-        } else {
-            return CLASS_SHEET_BODY;
-        }
-    } else if (edges > 0) {
-        if (edges == 1) {
-            return CLASS_CURVE;
-        } else {
-            return CLASS_WIREFRAME;
-        }
-    } else if (vertices > 0) {
-        return CLASS_POINT_CLOUD;
-    }
-
-    return CLASS_UNKNOWN;
 }
 
 // Element-specific analysis
 Array ocgd_TopologyAnalyzer::analyze_faces(const Ref<ocgd_TopoDS_Shape>& shape) {
     Array result;
 
-    if (shape.is_null()) {
-        return result;
-    }
-
     try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze faces - shape reference is null");
+            return result;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze faces - shape is null");
+            return result;
+        }
+
         const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze faces - OpenCASCADE shape is null");
+            return result;
+        }
 
         TopExp_Explorer face_explorer(occt_shape, TopAbs_FACE);
         int face_index = 0;
@@ -514,7 +619,11 @@ Array ocgd_TopologyAnalyzer::analyze_faces(const Ref<ocgd_TopoDS_Shape>& shape) 
         }
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception analyzing faces - " + String(e.GetMessageString()));
         set_error(String("Face analysis failed: ") + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception analyzing faces - " + String(e.what()));
+        set_error(String("Face analysis failed: ") + String(e.what()));
     }
 
     return result;
@@ -523,12 +632,23 @@ Array ocgd_TopologyAnalyzer::analyze_faces(const Ref<ocgd_TopoDS_Shape>& shape) 
 Array ocgd_TopologyAnalyzer::analyze_edges(const Ref<ocgd_TopoDS_Shape>& shape) {
     Array result;
 
-    if (shape.is_null()) {
-        return result;
-    }
-
     try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze edges - shape reference is null");
+            return result;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze edges - shape is null");
+            return result;
+        }
+
         const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze edges - OpenCASCADE shape is null");
+            return result;
+        }
 
         TopExp_Explorer edge_explorer(occt_shape, TopAbs_EDGE);
         int edge_index = 0;
@@ -544,7 +664,11 @@ Array ocgd_TopologyAnalyzer::analyze_edges(const Ref<ocgd_TopoDS_Shape>& shape) 
         }
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception analyzing edges - " + String(e.GetMessageString()));
         set_error(String("Edge analysis failed: ") + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception analyzing edges - " + String(e.what()));
+        set_error(String("Edge analysis failed: ") + String(e.what()));
     }
 
     return result;
@@ -553,12 +677,23 @@ Array ocgd_TopologyAnalyzer::analyze_edges(const Ref<ocgd_TopoDS_Shape>& shape) 
 Array ocgd_TopologyAnalyzer::analyze_vertices(const Ref<ocgd_TopoDS_Shape>& shape) {
     Array result;
 
-    if (shape.is_null()) {
-        return result;
-    }
-
     try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze vertices - shape reference is null");
+            return result;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze vertices - shape is null");
+            return result;
+        }
+
         const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot analyze vertices - OpenCASCADE shape is null");
+            return result;
+        }
 
         TopExp_Explorer vertex_explorer(occt_shape, TopAbs_VERTEX);
         int vertex_index = 0;
@@ -579,7 +714,11 @@ Array ocgd_TopologyAnalyzer::analyze_vertices(const Ref<ocgd_TopoDS_Shape>& shap
         }
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception analyzing vertices - " + String(e.GetMessageString()));
         set_error(String("Vertex analysis failed: ") + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception analyzing vertices - " + String(e.what()));
+        set_error(String("Vertex analysis failed: ") + String(e.what()));
     }
 
     return result;
@@ -848,13 +987,39 @@ Dictionary ocgd_TopologyAnalyzer::calculate_distance(const Ref<ocgd_TopoDS_Shape
                                                     const Ref<ocgd_TopoDS_Shape>& shape2) {
     Dictionary result;
 
-    if (shape1.is_null() || shape2.is_null()) {
-        return result;
-    }
-
     try {
+        if (shape1.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot calculate distance - shape1 reference is null");
+            return result;
+        }
+
+        if (shape2.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot calculate distance - shape2 reference is null");
+            return result;
+        }
+
+        if (shape1->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot calculate distance - shape1 is null");
+            return result;
+        }
+
+        if (shape2->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot calculate distance - shape2 is null");
+            return result;
+        }
+
         const TopoDS_Shape& occt_shape1 = shape1->get_occt_shape();
         const TopoDS_Shape& occt_shape2 = shape2->get_occt_shape();
+
+        if (occt_shape1.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot calculate distance - OpenCASCADE shape1 is null");
+            return result;
+        }
+
+        if (occt_shape2.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot calculate distance - OpenCASCADE shape2 is null");
+            return result;
+        }
 
         BRepExtrema_DistShapeShape distance_calculator(occt_shape1, occt_shape2);
         distance_calculator.Perform();
@@ -870,10 +1035,16 @@ Dictionary ocgd_TopologyAnalyzer::calculate_distance(const Ref<ocgd_TopoDS_Shape
                 result["point_on_shape1"] = gp_pnt_to_vector3(p1);
                 result["point_on_shape2"] = gp_pnt_to_vector3(p2);
             }
+        } else {
+            UtilityFunctions::printerr("TopologyAnalyzer: Distance calculation did not complete successfully");
         }
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception calculating distance - " + String(e.GetMessageString()));
         set_error(String("Distance calculation failed: ") + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception calculating distance - " + String(e.what()));
+        set_error(String("Distance calculation failed: ") + String(e.what()));
     }
 
     return result;
@@ -883,33 +1054,57 @@ Dictionary ocgd_TopologyAnalyzer::distance_point_to_shape(const Vector3& point,
                                                          const Ref<ocgd_TopoDS_Shape>& shape) {
     Dictionary result;
 
-    if (shape.is_null()) {
-        return result;
-    }
-
     try {
-        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
-        gp_Pnt gp_point(point.x, point.y, point.z);
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot calculate point distance - shape reference is null");
+            return result;
+        }
 
-        // Create a vertex from the point
-        BRep_Builder builder;
-        TopoDS_Vertex vertex;
-        builder.MakeVertex(vertex, gp_point, _tolerance);
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot calculate point distance - shape is null");
+            return result;
+        }
+
+        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot calculate point distance - OpenCASCADE shape is null");
+            return result;
+        }
+
+        gp_Pnt occt_point(point.x, point.y, point.z);
+
+        // Create a vertex from the point for distance calculation
+        BRepBuilderAPI_MakeVertex vertex_maker(occt_point);
+        
+        if (!vertex_maker.IsDone()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Failed to create vertex from point");
+            return result;
+        }
+        
+        TopoDS_Vertex vertex = vertex_maker.Vertex();
 
         BRepExtrema_DistShapeShape distance_calculator(vertex, occt_shape);
         distance_calculator.Perform();
 
         if (distance_calculator.IsDone()) {
             result["distance"] = distance_calculator.Value();
+            result["nb_solutions"] = distance_calculator.NbSolution();
 
             if (distance_calculator.NbSolution() > 0) {
                 gp_Pnt closest_point = distance_calculator.PointOnShape2(1);
                 result["closest_point"] = gp_pnt_to_vector3(closest_point);
             }
+        } else {
+            UtilityFunctions::printerr("TopologyAnalyzer: Point to shape distance calculation did not complete successfully");
         }
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception calculating point distance - " + String(e.GetMessageString()));
         set_error(String("Point to shape distance calculation failed: ") + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception calculating point distance - " + String(e.what()));
+        set_error(String("Point to shape distance calculation failed: ") + String(e.what()));
     }
 
     return result;
@@ -919,29 +1114,65 @@ Array ocgd_TopologyAnalyzer::find_closest_points(const Ref<ocgd_TopoDS_Shape>& s
                                                  const Ref<ocgd_TopoDS_Shape>& shape2) {
     Array result;
 
-    if (shape1.is_null() || shape2.is_null()) {
-        return result;
-    }
-
     try {
+        if (shape1.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot find closest points - shape1 reference is null");
+            return result;
+        }
+
+        if (shape2.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot find closest points - shape2 reference is null");
+            return result;
+        }
+
+        if (shape1->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot find closest points - shape1 is null");
+            return result;
+        }
+
+        if (shape2->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot find closest points - shape2 is null");
+            return result;
+        }
+
+
+
         const TopoDS_Shape& occt_shape1 = shape1->get_occt_shape();
         const TopoDS_Shape& occt_shape2 = shape2->get_occt_shape();
+
+        if (occt_shape1.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot find closest points - OpenCASCADE shape1 is null");
+            return result;
+        }
+
+        if (occt_shape2.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot find closest points - OpenCASCADE shape2 is null");
+            return result;
+        }
 
         BRepExtrema_DistShapeShape distance_calculator(occt_shape1, occt_shape2);
         distance_calculator.Perform();
 
         if (distance_calculator.IsDone()) {
-            for (int i = 1; i <= distance_calculator.NbSolution(); i++) {
-                Dictionary point_pair;
-                point_pair["point_on_shape1"] = gp_pnt_to_vector3(distance_calculator.PointOnShape1(i));
-                point_pair["point_on_shape2"] = gp_pnt_to_vector3(distance_calculator.PointOnShape2(i));
-                point_pair["distance"] = distance_calculator.Value();
-                result.append(point_pair);
+            int solutions = distance_calculator.NbSolution();
+            
+            for (int i = 1; i <= solutions; i++) {
+                Dictionary solution;
+                solution["point_on_shape1"] = gp_pnt_to_vector3(distance_calculator.PointOnShape1(i));
+                solution["point_on_shape2"] = gp_pnt_to_vector3(distance_calculator.PointOnShape2(i));
+                solution["distance"] = distance_calculator.Value();
+                result.append(solution);
             }
+        } else {
+            UtilityFunctions::printerr("TopologyAnalyzer: Closest points calculation did not complete successfully");
         }
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception finding closest points - " + String(e.GetMessageString()));
         set_error(String("Closest points calculation failed: ") + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception finding closest points - " + String(e.what()));
+        set_error(String("Closest points calculation failed: ") + String(e.what()));
     }
 
     return result;
@@ -1264,14 +1495,29 @@ Dictionary ocgd_TopologyAnalyzer::group_planar_faces(const Ref<ocgd_TopoDS_Shape
 Dictionary ocgd_TopologyAnalyzer::validate_shape(const Ref<ocgd_TopoDS_Shape>& shape) {
     Dictionary result;
 
-    if (shape.is_null()) {
-        result["valid"] = false;
-        result["error"] = "Shape is null";
-        return result;
-    }
-
     try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot validate shape - shape reference is null");
+            result["valid"] = false;
+            result["error"] = "Shape reference is null";
+            return result;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot validate shape - shape is null");
+            result["valid"] = false;
+            result["error"] = "Shape is null";
+            return result;
+        }
+
         const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot validate shape - OpenCASCADE shape is null");
+            result["valid"] = false;
+            result["error"] = "OpenCASCADE shape is null";
+            return result;
+        }
 
         BRepCheck_Analyzer analyzer(occt_shape);
         result["valid"] = analyzer.IsValid();
@@ -1285,8 +1531,13 @@ Dictionary ocgd_TopologyAnalyzer::validate_shape(const Ref<ocgd_TopoDS_Shape>& s
         }
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception validating shape - " + String(e.GetMessageString()));
         result["valid"] = false;
         result["error"] = String("Validation failed: ") + String(e.GetMessageString());
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception validating shape - " + String(e.what()));
+        result["valid"] = false;
+        result["error"] = String("Validation failed: ") + String(e.what());
     }
 
     return result;
@@ -1295,11 +1546,23 @@ Dictionary ocgd_TopologyAnalyzer::validate_shape(const Ref<ocgd_TopoDS_Shape>& s
 Dictionary ocgd_TopologyAnalyzer::check_geometry_issues(const Ref<ocgd_TopoDS_Shape>& shape) {
     Dictionary result;
 
-    if (shape.is_null()) {
-        return result;
-    }
-
     try {
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot check geometry issues - shape reference is null");
+            return result;
+        }
+
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot check geometry issues - shape is null");
+            return result;
+        }
+
+        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot check geometry issues - OpenCASCADE shape is null");
+            return result;
+        }
         Dictionary validation = validate_shape(shape);
         result["validation"] = validation;
 
@@ -1321,7 +1584,11 @@ Dictionary ocgd_TopologyAnalyzer::check_geometry_issues(const Ref<ocgd_TopoDS_Sh
         result["face_edge_ratio"] = faces > 0 ? (double)edges / (double)faces : 0.0;
 
     } catch (const Standard_Failure& e) {
-        set_error(String("Geometry issue check failed: ") + String(e.GetMessageString()));
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception checking geometry issues - " + String(e.GetMessageString()));
+        set_error(String("Geometry issues check failed: ") + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception checking geometry issues - " + String(e.what()));
+        set_error(String("Geometry issues check failed: ") + String(e.what()));
     }
 
     return result;
@@ -1381,19 +1648,36 @@ Dictionary ocgd_TopologyAnalyzer::calculate_complexity_metrics(const Ref<ocgd_To
 
 // Spatial analysis
 bool ocgd_TopologyAnalyzer::is_point_inside(const Vector3& point, const Ref<ocgd_TopoDS_Shape>& shape) {
-    if (shape.is_null()) {
-        return false;
-    }
-
     try {
-        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
-        gp_Pnt gp_point(point.x, point.y, point.z);
+        if (shape.is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot check point inside - shape reference is null");
+            return false;
+        }
 
-        BRepClass3d_SolidClassifier classifier(occt_shape, gp_point, _tolerance);
+        if (shape->is_null()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot check point inside - shape is null");
+            return false;
+        }
+
+        const TopoDS_Shape& occt_shape = shape->get_occt_shape();
+
+        if (occt_shape.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot check point inside - OpenCASCADE shape is null");
+            return false;
+        }
+
+        gp_Pnt occt_point(point.x, point.y, point.z);
+
+        BRepClass3d_SolidClassifier classifier(occt_shape, occt_point, 1e-7);
         return classifier.State() == TopAbs_IN;
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception checking point inside - " + String(e.GetMessageString()));
         set_error(String("Point inside check failed: ") + String(e.GetMessageString()));
+        return false;
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception checking point inside - " + String(e.what()));
+        set_error(String("Point inside check failed: ") + String(e.what()));
         return false;
     }
 }
@@ -1444,6 +1728,11 @@ Dictionary ocgd_TopologyAnalyzer::count_topology_elements(const TopoDS_Shape& sh
     Dictionary result;
 
     try {
+        if (shape.IsNull()) {
+            UtilityFunctions::printerr("TopologyAnalyzer: Cannot count topology elements - shape is null");
+            return result;
+        }
+
         TopTools_IndexedMapOfShape solids, shells, faces, wires, edges, vertices;
 
         TopExp::MapShapes(shape, TopAbs_SOLID, solids);
@@ -1464,7 +1753,11 @@ Dictionary ocgd_TopologyAnalyzer::count_topology_elements(const TopoDS_Shape& sh
         result["orientation"] = orientation_to_string(shape.Orientation());
 
     } catch (const Standard_Failure& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception counting topology elements - " + String(e.GetMessageString()));
         set_error(String("Topology counting failed: ") + String(e.GetMessageString()));
+    } catch (const std::exception& e) {
+        UtilityFunctions::printerr("TopologyAnalyzer: Exception counting topology elements - " + String(e.what()));
+        set_error(String("Topology counting failed: ") + String(e.what()));
     }
 
     return result;
