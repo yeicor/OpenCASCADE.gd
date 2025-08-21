@@ -62,7 +62,7 @@ find_package(OpenCASCADE REQUIRED)
 # TODO: automatically generate bindings during build (poetry run python ...)
 
 # Define the shared library target
-file(GLOB_RECURSE SOURCES "src/**/*.cpp")
+file(GLOB_RECURSE SOURCES "src/*.cpp" "src/**/*.cpp")
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
