@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ocgd_STEPCAFControl_Reader" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		STEP file reader with CAF (Common Application Framework) support.
+	</brief_description>
+	<description>
+		Godot GDExtension wrapper for OpenCASCADE STEPCAFControl_Reader class. Provides a tool to read STEP file and put it into DECAF document. Besides transfer of shapes (including assemblies) provided by STEPControl, supports also colors and part names.
+
+		This reader supports reading files with external references (multifile reading). It behaves as usual Reader (from STEPControl) for the main file (e.g. if it is single file). Results of reading other files can be accessed by name of the file or by iterating on readers.
+
+		The CAF support enables extraction of additional metadata including colors, materials, layers, assembly structure, and part names that are often critical for complete CAD data exchange.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clear_transfer_info">
+			<return type="void" />
+			<description>
+				Clear transfer information and reset the reader state.
+			</description>
+		</method>
+		<method name="get_color_tool" qualifiers="const">
+			<return type="Variant" />
+			<description>
+				Get the XCAFDoc_ColorTool for color information access.
+			</description>
+		</method>
+		<method name="get_document" qualifiers="const">
+			<return type="Variant" />
+			<description>
+				Get the current DECAF document.
+			</description>
+		</method>
+		<method name="get_external_files" qualifiers="const">
+			<return type="PackedStringArray" />
+			<description>
+				Get list of external files referenced by the main STEP file.
+			</description>
+		</method>
+		<method name="get_file_info" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get information about the loaded STEP file including header data, units, and metadata.
+			</description>
+		</method>
+		<method name="get_last_error" qualifiers="const">
+			<return type="String" />
+			<description>
+				Get the last error message from file operations.
+			</description>
+		</method>
+		<method name="get_layer_tool" qualifiers="const">
+			<return type="Variant" />
+			<description>
+				Get the XCAFDoc_LayerTool for layer information access.
+			</description>
+		</method>
+		<method name="get_material_tool" qualifiers="const">
+			<return type="Variant" />
+			<description>
+				Get the XCAFDoc_MaterialTool for material information access.
+			</description>
+		</method>
+		<method name="get_nb_entities" qualifiers="const">
+			<return type="int" />
+			<description>
+				Get the number of entities in the loaded STEP file.
+			</description>
+		</method>
+		<method name="get_nb_roots_for_transfer" qualifiers="const">
+			<return type="int" />
+			<description>
+				Get the number of root entities available for transfer.
+			</description>
+		</method>
+		<method name="get_one_shape" qualifiers="const">
+			<return type="ocgd_TopoDS_Shape" />
+			<description>
+				Get the result as one shape (compound if multiple shapes).
+			</description>
+		</method>
+		<method name="get_progress" qualifiers="const">
+			<return type="int" />
+			<description>
+				Get current transfer progress (0-100).
+			</description>
+		</method>
+		<method name="get_shape">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="num" type="int" default="1" />
+			<description>
+				Get a transferred shape by number (1-based index).
+			</description>
+		</method>
+		<method name="get_shape_tool" qualifiers="const">
+			<return type="Variant" />
+			<description>
+				Get the XCAFDoc_ShapeTool for shape information access.
+			</description>
+		</method>
+		<method name="get_transfer_statistics" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get statistics about the transfer process including success/failure counts.
+			</description>
+		</method>
+		<method name="get_units" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get units information from the STEP file.
+			</description>
+		</method>
+		<method name="init_document">
+			<return type="void" />
+			<param index="0" name="with_metadata" type="bool" default="true" />
+			<description>
+				Initialize a new DECAF document for reading. If with_metadata is true, enables color, material, and layer tools.
+			</description>
+		</method>
+		<method name="load_file">
+			<return type="bool" />
+			<param index="0" name="filename" type="String" />
+			<description>
+				Load a STEP file. Returns true if loading succeeded.
+			</description>
+		</method>
+		<method name="nb_shapes" qualifiers="const">
+			<return type="int" />
+			<description>
+				Get the number of transferred shapes.
+			</description>
+		</method>
+		<method name="perform_transfer">
+			<return type="bool" />
+			<description>
+				Perform the complete transfer of all entities. Returns true if transfer succeeded.
+			</description>
+		</method>
+		<method name="print_check_load">
+			<return type="String" />
+			<param index="0" name="fail_only" type="bool" default="false" />
+			<description>
+				Print check load results. If fail_only is true, only shows failures.
+			</description>
+		</method>
+		<method name="print_check_transfer">
+			<return type="String" />
+			<param index="0" name="fail_only" type="bool" default="false" />
+			<description>
+				Print check transfer results. If fail_only is true, only shows failures.
+			</description>
+		</method>
+		<method name="print_stats">
+			<return type="String" />
+			<param index="0" name="what" type="int" default="0" />
+			<description>
+				Print statistics about loaded entities and transfer results.
+			</description>
+		</method>
+		<method name="read_file">
+			<return type="bool" />
+			<param index="0" name="filename" type="String" />
+			<description>
+				Read a STEP file and perform complete transfer in one operation. Returns true if successful.
+			</description>
+		</method>
+		<method name="set_color_mode">
+			<return type="void" />
+			<param index="0" name="colormode" type="bool" />
+			<description>
+				Set color mode for reading color information from STEP file.
+			</description>
+		</method>
+		<method name="set_layer_mode">
+			<return type="void" />
+			<param index="0" name="layermode" type="bool" />
+			<description>
+				Set layer mode for reading layer information from STEP file.
+			</description>
+		</method>
+		<method name="set_name_mode">
+			<return type="void" />
+			<param index="0" name="namemode" type="bool" />
+			<description>
+				Set name mode for reading part names from STEP file.
+			</description>
+		</method>
+		<method name="set_props_mode">
+			<return type="void" />
+			<param index="0" name="propsmode" type="bool" />
+			<description>
+				Set properties mode for reading custom properties from STEP file.
+			</description>
+		</method>
+		<method name="transfer_entity">
+			<return type="bool" />
+			<param index="0" name="num" type="int" />
+			<description>
+				Transfer a specific entity by number. Returns true if transfer succeeded.
+			</description>
+		</method>
+		<method name="transfer_one_root">
+			<return type="bool" />
+			<param index="0" name="num" type="int" default="1" />
+			<description>
+				Transfer one root entity by number. Returns true if transfer succeeded.
+			</description>
+		</method>
+		<method name="transfer_roots">
+			<return type="bool" />
+			<description>
+				Transfer all root entities. Returns true if all transfers succeeded.
+			</description>
+		</method>
+		<method name="validate_file" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Validate the loaded STEP file for consistency and errors.
+			</description>
+		</method>
+	</methods>
+</class>

@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ocgd_BooleanOperations" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Wrapper class for OpenCASCADE Boolean operations.
+	</brief_description>
+	<description>
+		Wrapper class to expose OpenCASCADE Boolean operations to Godot. This class provides comprehensive Boolean operation capabilities including basic two-shape operations, multi-shape operations, and advanced options for controlling operation parameters and result quality.
+
+		Boolean operations are fundamental CAD operations used for creating complex shapes from simple primitives, removing material (drilling holes, cutting), finding intersections and overlaps, and shape analysis and validation.
+
+		Supports Union (Fuse), Intersection (Common), Difference (Cut), Section, and Split operations with options for fuzzy tolerance, parallel processing, and result validation.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clear_messages">
+			<return type="void" />
+			<description>
+				Clear error and warning history.
+			</description>
+		</method>
+		<method name="estimate_operation_complexity" qualifiers="const">
+			<return type="Dictionary" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<param index="2" name="operation_type" type="String" />
+			<description>
+				Estimate operation complexity for the given shapes and operation type. Returns a Dictionary with complexity metrics.
+			</description>
+		</method>
+		<method name="get_check_inverted" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get inverted solid checking setting.
+			</description>
+		</method>
+		<method name="get_fuzzy_tolerance" qualifiers="const">
+			<return type="float" />
+			<description>
+				Get the current fuzzy tolerance setting.
+			</description>
+		</method>
+		<method name="get_last_error" qualifiers="const">
+			<return type="String" />
+			<description>
+				Get the last operation error message.
+			</description>
+		</method>
+		<method name="get_last_warnings" qualifiers="const">
+			<return type="Array" />
+			<description>
+				Get the last operation warning messages.
+			</description>
+		</method>
+		<method name="get_operation_timing" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get timing information for the last operation.
+			</description>
+		</method>
+		<method name="get_run_parallel" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get parallel execution setting.
+			</description>
+		</method>
+		<method name="get_use_oriented_bbox" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get oriented bounding box usage setting.
+			</description>
+		</method>
+		<method name="intersect_multiple">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="shapes" type="Array" />
+			<description>
+				Intersect multiple shapes (common volume of all). Returns the intersection shape, or null if operation failed.
+			</description>
+		</method>
+		<method name="intersect_shapes">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Boolean Intersection (Common) - Find common volume between two shapes. Returns the intersection shape, or null if operation failed.
+			</description>
+		</method>
+		<method name="intersect_with_validation">
+			<return type="Dictionary" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Boolean Intersection with validation and error reporting. Returns Dictionary with "result", "success", "errors", "warnings".
+			</description>
+		</method>
+		<method name="quick_intersect">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Quick intersection operation with default settings. Returns the intersection shape, or null if failed.
+			</description>
+		</method>
+		<method name="quick_subtract">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Quick subtraction operation with default settings. Returns the result shape, or null if failed.
+			</description>
+		</method>
+		<method name="quick_union">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Quick union operation with default settings. Returns the unified shape, or null if failed.
+			</description>
+		</method>
+		<method name="section_shapes">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Boolean Section - Find intersection curves/surfaces between two shapes. Returns the section shape (curves/surfaces), or null if operation failed.
+			</description>
+		</method>
+		<method name="set_check_inverted">
+			<return type="void" />
+			<param index="0" name="check_inverted" type="bool" />
+			<description>
+				Set whether to check for inverted solids.
+			</description>
+		</method>
+		<method name="set_fuzzy_tolerance">
+			<return type="void" />
+			<param index="0" name="tolerance" type="float" />
+			<description>
+				Set fuzzy tolerance for Boolean operations. Use 0 for exact operations, >0 for tolerant operations.
+			</description>
+		</method>
+		<method name="set_run_parallel">
+			<return type="void" />
+			<param index="0" name="run_parallel" type="bool" />
+			<description>
+				Set whether to run operations in parallel when possible.
+			</description>
+		</method>
+		<method name="set_use_oriented_bbox">
+			<return type="void" />
+			<param index="0" name="use_obb" type="bool" />
+			<description>
+				Set whether to use oriented bounding boxes for optimization.
+			</description>
+		</method>
+		<method name="shape_contains">
+			<return type="bool" />
+			<param index="0" name="outer_shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="inner_shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Check if one shape is completely inside another. Returns true if inner_shape is inside outer_shape.
+			</description>
+		</method>
+		<method name="shapes_intersect">
+			<return type="bool" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Check if shapes intersect (have common volume). Returns true if shapes intersect.
+			</description>
+		</method>
+		<method name="split_shape">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="tools" type="Array" />
+			<description>
+				Split a shape by multiple tools. Returns the split shape, or null if operation failed.
+			</description>
+		</method>
+		<method name="subtract_shapes">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Boolean Difference (Cut) - Subtract second shape from first. Returns the result shape, or null if operation failed.
+			</description>
+		</method>
+		<method name="subtract_with_validation">
+			<return type="Dictionary" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Boolean Difference with validation and error reporting. Returns Dictionary with "result", "success", "errors", "warnings".
+			</description>
+		</method>
+		<method name="union_multiple">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="shapes" type="Array" />
+			<description>
+				Union multiple shapes into one. Returns the unified shape, or null if operation failed.
+			</description>
+		</method>
+		<method name="union_shapes">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Boolean Union (Fuse) - Combine two shapes into one. Returns the unified shape, or null if operation failed.
+			</description>
+		</method>
+		<method name="union_with_validation">
+			<return type="Dictionary" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Boolean Union with validation and error reporting. Returns Dictionary with "result", "success", "errors", "warnings".
+			</description>
+		</method>
+		<method name="validate_shapes_for_boolean">
+			<return type="Dictionary" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Check if two shapes can be used for Boolean operations. Returns Dictionary with validation results.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="OPERATION_UNION" value="0" enum="OperationType">
+			Union (Fuse) operation - combines shapes.
+		</constant>
+		<constant name="OPERATION_INTERSECT" value="1" enum="OperationType">
+			Intersection (Common) operation - finds common volume.
+		</constant>
+		<constant name="OPERATION_SUBTRACT" value="2" enum="OperationType">
+			Subtraction (Cut) operation - removes one shape from another.
+		</constant>
+		<constant name="OPERATION_SECTION" value="3" enum="OperationType">
+			Section operation - finds intersection curves/surfaces.
+		</constant>
+		<constant name="OPERATION_SPLIT" value="4" enum="OperationType">
+			Split operation - splits shape by tools.
+		</constant>
+	</constants>
+</class>

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ocgd_MeshDataExtractor" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Utility class to extract triangulation data from OpenCASCADE shapes.
+	</brief_description>
+	<description>
+		Utility class to extract triangulation data from OpenCASCADE shapes and convert it into Godot-compatible mesh data structures. This class provides methods to extract vertices, triangles, normals, and UV coordinates from triangulated OpenCASCADE shapes, converting them into Godot-friendly data structures that can be used to create Godot meshes.
+
+		The class handles the extraction of 3D vertex positions, triangle indices, surface normals (when available), UV texture coordinates (when available), and per-face material and color information. This is essential for rendering CAD geometry in Godot's 3D engine.
+
+		The extractor can work with different mesh purposes (presentation, calculation, etc.) and provides options for vertex merging and data optimization.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="extract_face_data">
+			<return type="Dictionary" />
+			<param index="0" name="face" type="ocgd_TopoDS_Shape" />
+			<description>
+				Extract mesh data from a specific face. Returns a Dictionary with mesh data for the single face.
+			</description>
+		</method>
+		<method name="extract_mesh_data">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Extract complete mesh data from a shape. Returns a Dictionary with keys: "vertices", "triangles", "normals", "uvs".
+			</description>
+		</method>
+		<method name="extract_mesh_data_with_purpose">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="purpose" type="int" />
+			<description>
+				Extract mesh data with specific mesh purpose. Use MeshPurpose enum values to specify the type of triangulation to extract.
+			</description>
+		</method>
+		<method name="extract_normals">
+			<return type="PackedVector3Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Extract just normals from a shape. Returns array of normal vectors.
+			</description>
+		</method>
+		<method name="extract_per_face_data">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Extract mesh data per face (useful for multi-material meshes). Returns an Array of Dictionaries, one per face.
+			</description>
+		</method>
+		<method name="extract_triangles">
+			<return type="PackedInt32Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Extract just triangle indices from a shape. Returns array of triangle vertex indices.
+			</description>
+		</method>
+		<method name="extract_uvs">
+			<return type="PackedVector2Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Extract just UV coordinates from a shape. Returns array of texture coordinates.
+			</description>
+		</method>
+		<method name="extract_vertices">
+			<return type="PackedVector3Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Extract just vertices from a shape. Returns array of 3D vertex positions.
+			</description>
+		</method>
+		<method name="face_has_triangulation" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="face" type="ocgd_TopoDS_Shape" />
+			<description>
+				Check if a specific face has triangulation data.
+			</description>
+		</method>
+		<method name="get_include_normals" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get whether normal vectors are included in extraction.
+			</description>
+		</method>
+		<method name="get_include_uvs" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get whether UV coordinates are included in extraction.
+			</description>
+		</method>
+		<method name="get_merge_vertices" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get whether vertices are merged during extraction.
+			</description>
+		</method>
+		<method name="get_triangulated_area" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Extract surface area from triangulation.
+			</description>
+		</method>
+		<method name="get_triangulation_bounds" qualifiers="const">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get bounding box of triangulated geometry. Returns Dictionary with "min" and "max" Vector3 values.
+			</description>
+		</method>
+		<method name="get_triangulation_stats" qualifiers="const">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get triangulation statistics for a shape. Returns Dictionary with "face_count", "triangle_count", "vertex_count".
+			</description>
+		</method>
+		<method name="get_vertex_merge_tolerance" qualifiers="const">
+			<return type="float" />
+			<description>
+				Get vertex merging tolerance.
+			</description>
+		</method>
+		<method name="has_triangulation" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Check if a shape has triangulation data.
+			</description>
+		</method>
+		<method name="set_include_normals">
+			<return type="void" />
+			<param index="0" name="include" type="bool" />
+			<description>
+				Set whether to include normal vectors in extraction.
+			</description>
+		</method>
+		<method name="set_include_uvs">
+			<return type="void" />
+			<param index="0" name="include" type="bool" />
+			<description>
+				Set whether to include UV coordinates in extraction.
+			</description>
+		</method>
+		<method name="set_merge_vertices">
+			<return type="void" />
+			<param index="0" name="merge" type="bool" />
+			<description>
+				Set whether to merge duplicate vertices during extraction.
+			</description>
+		</method>
+		<method name="set_vertex_merge_tolerance">
+			<return type="void" />
+			<param index="0" name="tolerance" type="float" />
+			<description>
+				Set tolerance for vertex merging. Vertices closer than this distance will be considered duplicates.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="MESH_PURPOSE_NONE" value="0" enum="MeshPurpose">
+			No specific mesh purpose.
+		</constant>
+		<constant name="MESH_PURPOSE_USER" value="1" enum="MeshPurpose">
+			User-defined mesh purpose.
+		</constant>
+		<constant name="MESH_PURPOSE_PRESENTATION" value="2" enum="MeshPurpose">
+			Mesh for presentation/rendering purposes.
+		</constant>
+		<constant name="MESH_PURPOSE_CALCULATION" value="3" enum="MeshPurpose">
+			Mesh for computational purposes.
+		</constant>
+		<constant name="MESH_PURPOSE_ACTIVE" value="4" enum="MeshPurpose">
+			Active mesh purpose.
+		</constant>
+		<constant name="MESH_PURPOSE_LOADED" value="5" enum="MeshPurpose">
+			Loaded mesh purpose.
+		</constant>
+		<constant name="MESH_PURPOSE_ANY_FALLBACK" value="6" enum="MeshPurpose">
+			Any fallback mesh purpose.
+		</constant>
+	</constants>
+</class>

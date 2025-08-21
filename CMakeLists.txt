@@ -59,11 +59,25 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp")
 # Dependencies
 find_package(OpenCASCADE REQUIRED)
 
-# TODO: automatically generate bindings during build (poetry run python ...)
+# Define the documentation sources (the godot-cpp cmake version does not work?)
+find_package(Python3 3.4 REQUIRED) # pathlib should be present
+file(GLOB_RECURSE DOC_XML LIST_DIRECTORIES NO CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/doc_classes/*.xml" "${PROJECT_SOURCE_DIR}/doc_classes/**/*.xml")
+set(DOC_GEN_FILE "${CMAKE_CURRENT_BINARY_DIR}/gen/doc_data.cpp")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/gen")
+set(PYTHON_LIST "'${DOC_XML}'")
+list(JOIN PYTHON_LIST "','" PYTHON_LIST)
+add_custom_command(
+    OUTPUT ${DOC_GEN_FILE}
+    COMMAND ${Python3_EXECUTABLE} "-c" "from doc_source_generator import generate_doc_source; generate_doc_source('${DOC_GEN_FILE}', [${PYTHON_LIST}])"
+    VERBATIM
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp
+    DEPENDS ${DOC_XML}
+)
+add_custom_target(generate_doc_data DEPENDS ${DOC_GEN_FILE})
 
 # Define the shared library target
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/**/*.cpp")
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} SHARED ${SOURCES} ${DOC_GEN_FILE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
 

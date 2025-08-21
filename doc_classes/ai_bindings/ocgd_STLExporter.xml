@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ocgd_STLExporter" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		STL file exporter for OpenCASCADE shapes.
+	</brief_description>
+	<description>
+		Wrapper class to expose OpenCASCADE STL export functionality to Godot. This class provides methods to export OpenCASCADE shapes to STL format, supporting both ASCII and binary STL file formats. STL (STereoLithography) is a widely used file format for 3D printing and rapid prototyping.
+
+		The class handles shape validation, mesh quality control, and provides progress feedback for large export operations. Features include export to ASCII or binary STL files, control over mesh quality and deflection parameters, progress reporting for large exports, validation of shapes before export, and support for compound shapes and assemblies.
+
+		This is commonly used for preparing CAD models for 3D printing or other manufacturing processes that require triangulated mesh data.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="can_export_shape" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Check if a shape can be exported to STL. Returns true if the shape is valid for STL export.
+			</description>
+		</method>
+		<method name="export_multiple_shapes">
+			<return type="int" />
+			<param index="0" name="shapes" type="Array" />
+			<param index="1" name="base_filename" type="String" />
+			<param index="2" name="ascii_mode" type="bool" default="true" />
+			<description>
+				Export multiple shapes to separate STL files. The base_filename will have index numbers appended. Returns the number of successfully exported files.
+			</description>
+		</method>
+		<method name="export_to_bytes" qualifiers="const">
+			<return type="PackedByteArray" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="ascii_mode" type="bool" />
+			<description>
+				Export shape to STL format and return as byte array. Returns STL data as PackedByteArray, empty if failed.
+			</description>
+		</method>
+		<method name="get_ascii_mode" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get the current output format mode. Returns true if ASCII mode is enabled, false for binary mode.
+			</description>
+		</method>
+		<method name="get_estimated_file_size" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="ascii_mode" type="bool" />
+			<description>
+				Get estimated file size for STL export. Returns estimated file size in bytes.
+			</description>
+		</method>
+		<method name="get_recommended_deflection" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="quality_factor" type="float" default="0.5" />
+			<description>
+				Get recommended deflection for STL export based on shape size. Quality factor: 0.1 = coarse, 1.0 = fine. Returns recommended linear deflection value.
+			</description>
+		</method>
+		<method name="get_triangle_count" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get triangle count for a shape (requires triangulation). Returns number of triangles that would be exported.
+			</description>
+		</method>
+		<method name="quick_export">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="filename" type="String" />
+			<param index="2" name="ascii_mode" type="bool" default="true" />
+			<description>
+				Quick export with default settings. Returns true if export succeeded.
+			</description>
+		</method>
+		<method name="set_ascii_mode">
+			<return type="void" />
+			<param index="0" name="ascii_mode" type="bool" />
+			<description>
+				Set the output format mode. If true, generates ASCII STL file; if false, generates binary STL file.
+			</description>
+		</method>
+		<method name="validate_shape_for_export" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Validate shape for STL export and return error message if any. Returns empty string if valid, error message otherwise.
+			</description>
+		</method>
+		<method name="write_file">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="filename" type="String" />
+			<description>
+				Export a shape to STL file. Returns true if export succeeded, false otherwise.
+			</description>
+		</method>
+		<method name="write_file_with_progress">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="filename" type="String" />
+			<param index="2" name="progress_callback" type="String" default="&quot;&quot;" />
+			<description>
+				Export a shape to STL file with progress reporting. The progress_callback is the name of method to call for progress updates (0.0 to 1.0). Returns true if export succeeded, false otherwise.
+			</description>
+		</method>
+	</methods>
+</class>

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ocgd_IGESReader" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		IGES file reader for OpenCASCADE shapes.
+	</brief_description>
+	<description>
+		Godot GDExtension wrapper for OpenCASCADE IGES import functionality. This class provides methods to import IGES (Initial Graphics Exchange Specification) files, a widely used CAD data exchange format. IGES files can contain 2D and 3D geometric data, including curves, surfaces, solids, and assembly information.
+
+		Features include reading IGES files (.igs, .iges formats), support for both visible and all entities import, transfer individual entities or complete models, progress reporting and error checking, shape validation and healing options, and statistics and diagnostic information.
+
+		The reader follows the standard OpenCASCADE workflow: load IGES file into memory, check file validity and report errors, transfer entities to OpenCASCADE shapes, and validate and fix resulting geometry.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clear_transfer_info">
+			<return type="void" />
+			<description>
+				Clear transfer information and statistics.
+			</description>
+		</method>
+		<method name="get_check_fail_results" qualifiers="const">
+			<return type="Array" />
+			<description>
+				Get check fail results from the last operation.
+			</description>
+		</method>
+		<method name="get_file_info" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get information about the loaded IGES file including header data, units, and statistics.
+			</description>
+		</method>
+		<method name="get_last_error" qualifiers="const">
+			<return type="String" />
+			<description>
+				Get the last error message from file operations.
+			</description>
+		</method>
+		<method name="get_nb_entities" qualifiers="const">
+			<return type="int" />
+			<description>
+				Get the number of entities in the loaded IGES file.
+			</description>
+		</method>
+		<method name="get_nb_roots_for_transfer" qualifiers="const">
+			<return type="int" />
+			<description>
+				Get the number of root entities available for transfer.
+			</description>
+		</method>
+		<method name="get_one_shape" qualifiers="const">
+			<return type="ocgd_TopoDS_Shape" />
+			<description>
+				Get the result as one shape (compound if multiple shapes).
+			</description>
+		</method>
+		<method name="get_progress" qualifiers="const">
+			<return type="int" />
+			<description>
+				Get current transfer progress (0-100).
+			</description>
+		</method>
+		<method name="get_shape">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="num" type="int" default="1" />
+			<description>
+				Get a transferred shape by number (1-based index).
+			</description>
+		</method>
+		<method name="get_transfer_statistics" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get statistics about the transfer process.
+			</description>
+		</method>
+		<method name="load_file">
+			<return type="bool" />
+			<param index="0" name="filename" type="String" />
+			<description>
+				Load an IGES file. Returns true if loading succeeded.
+			</description>
+		</method>
+		<method name="nb_shapes" qualifiers="const">
+			<return type="int" />
+			<description>
+				Get the number of transferred shapes.
+			</description>
+		</method>
+		<method name="prepare_transfer">
+			<return type="void" />
+			<description>
+				Prepare for transfer after loading file.
+			</description>
+		</method>
+		<method name="print_check_load">
+			<return type="String" />
+			<param index="0" name="fail_only" type="bool" default="false" />
+			<description>
+				Print check load results. If fail_only is true, only shows failures.
+			</description>
+		</method>
+		<method name="print_check_transfer">
+			<return type="String" />
+			<param index="0" name="fail_only" type="bool" default="false" />
+			<description>
+				Print check transfer results. If fail_only is true, only shows failures.
+			</description>
+		</method>
+		<method name="print_stats">
+			<return type="String" />
+			<param index="0" name="what" type="int" default="0" />
+			<description>
+				Print statistics about loaded entities and transfer results.
+			</description>
+		</method>
+		<method name="set_read_visible_only">
+			<return type="void" />
+			<param index="0" name="visible_only" type="bool" />
+			<description>
+				Set whether to read only visible entities (default: false, reads all).
+			</description>
+		</method>
+		<method name="transfer_entity">
+			<return type="bool" />
+			<param index="0" name="num" type="int" />
+			<description>
+				Transfer a specific entity by number. Returns true if transfer succeeded.
+			</description>
+		</method>
+		<method name="transfer_list">
+			<return type="bool" />
+			<param index="0" name="list" type="Array" />
+			<description>
+				Transfer a list of entity numbers. Returns true if all transfers succeeded.
+			</description>
+		</method>
+		<method name="transfer_one_root">
+			<return type="bool" />
+			<param index="0" name="num" type="int" default="1" />
+			<description>
+				Transfer one root entity by number. Returns true if transfer succeeded.
+			</description>
+		</method>
+		<method name="transfer_roots">
+			<return type="bool" />
+			<description>
+				Transfer all root entities. Returns true if all transfers succeeded.
+			</description>
+		</method>
+		<method name="validate_file" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Validate the loaded IGES file for consistency and errors.
+			</description>
+		</method>
+	</methods>
+</class>

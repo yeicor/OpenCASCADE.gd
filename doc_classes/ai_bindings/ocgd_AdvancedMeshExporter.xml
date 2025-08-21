@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ocgd_AdvancedMeshExporter" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Advanced mesh export functionality for OpenCASCADE shapes.
+	</brief_description>
+	<description>
+		Godot GDExtension wrapper for OpenCASCADE advanced mesh export functionality. This class provides comprehensive mesh export capabilities with support for multiple file formats (PLY, OBJ, STL), color and material information, custom mesh properties and attributes, high-quality triangulation control, texture coordinate export, normal vector export, and progress monitoring.
+
+		Features include format-specific optimization, color per vertex/face support, material property preservation, custom coordinate system conversion, export validation and quality checks, batch export capabilities, and memory-efficient processing.
+
+		The exporter supports advanced features like preserving CAD-specific information during mesh export, handling complex assemblies with multiple materials, and providing fine-grained control over mesh quality and appearance.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="export_multiple_formats">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="base_filename" type="String" />
+			<param index="2" name="formats" type="Array" />
+			<description>
+				Export shape to multiple formats using the same base filename with different extensions. Returns true if all exports succeeded.
+			</description>
+		</method>
+		<method name="export_to_obj">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="filename" type="String" />
+			<param index="2" name="include_materials" type="bool" default="true" />
+			<description>
+				Export shape to Wavefront OBJ format with optional material (.mtl) file. Returns true if export succeeded.
+			</description>
+		</method>
+		<method name="export_to_ply">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="filename" type="String" />
+			<param index="2" name="binary_format" type="bool" default="false" />
+			<description>
+				Export shape to PLY format (Stanford Polygon Library). Can export in ASCII or binary format. Returns true if export succeeded.
+			</description>
+		</method>
+		<method name="export_to_stl">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="filename" type="String" />
+			<param index="2" name="binary_format" type="bool" default="true" />
+			<description>
+				Export shape to STL format. Can export in ASCII or binary format. Returns true if export succeeded.
+			</description>
+		</method>
+		<method name="export_with_colors">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="filename" type="String" />
+			<param index="2" name="format" type="int" />
+			<param index="3" name="colors" type="PackedColorArray" />
+			<description>
+				Export shape with custom color information. Colors array should match the number of faces or vertices.
+			</description>
+		</method>
+		<method name="get_export_format" qualifiers="const">
+			<return type="int" />
+			<description>
+				Get the current default export format.
+			</description>
+		</method>
+		<method name="get_export_statistics" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get statistics from the last export operation including triangle count, vertex count, and file size.
+			</description>
+		</method>
+		<method name="get_include_colors" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get whether color information is included in exports.
+			</description>
+		</method>
+		<method name="get_include_materials" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get whether material information is included in exports.
+			</description>
+		</method>
+		<method name="get_include_normals" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get whether normal vectors are included in exports.
+			</description>
+		</method>
+		<method name="get_include_textures" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get whether texture coordinates are included in exports.
+			</description>
+		</method>
+		<method name="get_last_error" qualifiers="const">
+			<return type="String" />
+			<description>
+				Get the last error message from export operations.
+			</description>
+		</method>
+		<method name="get_mesh_quality" qualifiers="const">
+			<return type="float" />
+			<description>
+				Get the current mesh quality setting (0.0 = coarse, 1.0 = fine).
+			</description>
+		</method>
+		<method name="get_progress" qualifiers="const">
+			<return type="int" />
+			<description>
+				Get current export progress (0-100).
+			</description>
+		</method>
+		<method name="get_supported_formats" qualifiers="const">
+			<return type="PackedStringArray" />
+			<description>
+				Get list of supported export formats.
+			</description>
+		</method>
+		<method name="preview_export">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="format" type="int" />
+			<description>
+				Preview export without writing file. Returns dictionary with estimated file size, triangle count, and other metrics.
+			</description>
+		</method>
+		<method name="set_coordinate_system">
+			<return type="void" />
+			<param index="0" name="up_axis" type="Vector3" />
+			<param index="1" name="forward_axis" type="Vector3" />
+			<description>
+				Set custom coordinate system for export. Useful for converting between different CAD coordinate conventions.
+			</description>
+		</method>
+		<method name="set_export_format">
+			<return type="void" />
+			<param index="0" name="format" type="int" />
+			<description>
+				Set the default export format for subsequent operations.
+			</description>
+		</method>
+		<method name="set_include_colors">
+			<return type="void" />
+			<param index="0" name="include" type="bool" />
+			<description>
+				Set whether to include color information in exports.
+			</description>
+		</method>
+		<method name="set_include_materials">
+			<return type="void" />
+			<param index="0" name="include" type="bool" />
+			<description>
+				Set whether to include material information in exports.
+			</description>
+		</method>
+		<method name="set_include_normals">
+			<return type="void" />
+			<param index="0" name="include" type="bool" />
+			<description>
+				Set whether to include normal vectors in exports.
+			</description>
+		</method>
+		<method name="set_include_textures">
+			<return type="void" />
+			<param index="0" name="include" type="bool" />
+			<description>
+				Set whether to include texture coordinates in exports.
+			</description>
+		</method>
+		<method name="set_mesh_quality">
+			<return type="void" />
+			<param index="0" name="quality" type="float" />
+			<description>
+				Set mesh quality for triangulation (0.0 = coarse, 1.0 = fine).
+			</description>
+		</method>
+		<method name="validate_export_settings">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="format" type="int" />
+			<description>
+				Validate export settings for the given shape and format. Returns validation results and warnings.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="FORMAT_PLY" value="0" enum="ExportFormat">
+			Stanford PLY format.
+		</constant>
+		<constant name="FORMAT_OBJ" value="1" enum="ExportFormat">
+			Wavefront OBJ format.
+		</constant>
+		<constant name="FORMAT_STL" value="2" enum="ExportFormat">
+			STL format.
+		</constant>
+		<constant name="FORMAT_AUTO" value="3" enum="ExportFormat">
+			Auto-detect format from file extension.
+		</constant>
+	</constants>
+</class>

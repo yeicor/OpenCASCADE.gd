@@ -1,5 +1,5 @@
 # Ignore generated source files
-/src/gen_*
+/src/gen*
 
 # Build artifacts.
 /build/

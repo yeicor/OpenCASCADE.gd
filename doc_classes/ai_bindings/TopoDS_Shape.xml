@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="TopoDS_Shape" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		OpenCASCADE shape representation for CAD modeling.
+	</brief_description>
+	<description>
+		Describes a shape which references an underlying shape with the potential to be given a location and an orientation. Has a location for the underlying shape, giving its placement in the local coordinate system. Has an orientation for the underlying shape, in terms of its geometry (as opposed to orientation in relation to other shapes).
+
+		A Shape is empty if it references an underlying shape which has an empty list of shapes. This class is fundamental to all CAD operations in OpenCASCADE and serves as the base for all geometric entities including vertices, edges, faces, shells, solids, and compounds.
+
+		The shape maintains:
+		- Reference to underlying geometry (TShape)
+		- Local coordinate system location
+		- Orientation information
+		- Topological validity state
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="complemented" qualifiers="const">
+			<return type="TopoDS_Shape" />
+			<description>
+				Returns the complement of the orientation. This method creates a new shape with the orientation complement applied.
+			</description>
+		</method>
+		<method name="empty_copy" qualifiers="const">
+			<return type="TopoDS_Shape" />
+			<description>
+				Creates a new empty copy of this shape. The returned shape has the same type and structure but contains no geometric data.
+			</description>
+		</method>
+		<method name="hash_code" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns a hash code value for this shape. Can be used for shape comparison and storage in hash-based data structures.
+			</description>
+		</method>
+		<method name="is_equal" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="other" type="TopoDS_Shape" />
+			<description>
+				Returns true if two shapes are equal, i.e. if they share the same TShape with the same Locations and Orientations. This is a stricter comparison than [method is_same].
+			</description>
+		</method>
+		<method name="is_null" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns true if this shape is null. In other words, it references no underlying shape with the potential to be given a location and an orientation.
+			</description>
+		</method>
+		<method name="is_same" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="other" type="TopoDS_Shape" />
+			<description>
+				Returns true if two shapes are the same, i.e. if they share the same TShape with the same Locations. Orientations may differ. This is less strict than [method is_equal].
+			</description>
+		</method>
+		<method name="is_valid" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns true if the shape is not null and has the correct type. Performs basic validity checks on the shape structure.
+			</description>
+		</method>
+		<method name="located" qualifiers="const">
+			<return type="TopoDS_Shape" />
+			<param index="0" name="loc" type="Vector3" />
+			<description>
+				Creates a copy of this shape with the same TShape and Orientation but with a different Location. The location is specified as a translation vector.
+			</description>
+		</method>
+		<method name="location" qualifiers="const">
+			<return type="Vector3" />
+			<description>
+				Returns the shape local coordinate system location as a translation vector. This represents the position offset of the shape in 3D space.
+			</description>
+		</method>
+		<method name="moved" qualifiers="const">
+			<return type="TopoDS_Shape" />
+			<param index="0" name="loc" type="Vector3" />
+			<description>
+				Returns a shape similar to this one with the local coordinate system moved by the specified translation vector. This applies a transformation to the current location.
+			</description>
+		</method>
+		<method name="nullify">
+			<return type="void" />
+			<description>
+				Destroys the reference to the underlying shape stored in this shape. As a result, this shape becomes null.
+			</description>
+		</method>
+		<method name="orientation" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the orientation of the shape. The returned value corresponds to one of the Orientation enum values (FORWARD, REVERSED, INTERNAL, EXTERNAL).
+			</description>
+		</method>
+		<method name="oriented" qualifiers="const">
+			<return type="TopoDS_Shape" />
+			<param index="0" name="orient" type="int" />
+			<description>
+				Creates a copy of this shape with the same TShape and Location but with a different Orientation. The orientation parameter should be one of the Orientation enum values.
+			</description>
+		</method>
+		<method name="reversed" qualifiers="const">
+			<return type="TopoDS_Shape" />
+			<description>
+				Returns the complement of the orientation, using the orientation reversal map. This creates a new shape with the orientation reversed.
+			</description>
+		</method>
+		<method name="set_orientation">
+			<return type="void" />
+			<param index="0" name="orient" type="int" />
+			<description>
+				Sets the orientation of the shape. The orientation parameter should be one of the Orientation enum values (FORWARD, REVERSED, INTERNAL, EXTERNAL).
+			</description>
+		</method>
+		<method name="shape_type" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the type of the shape. Returns SHAPE if the shape is null. The returned value corresponds to one of the ShapeType enum values.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="COMPOUND" value="0" enum="ShapeType">
+			A collection of shapes without specific topological structure.
+		</constant>
+		<constant name="COMPSOLID" value="1" enum="ShapeType">
+			A composite solid made of connected solids.
+		</constant>
+		<constant name="SOLID" value="2" enum="ShapeType">
+			A three-dimensional shape with volume.
+		</constant>
+		<constant name="SHELL" value="3" enum="ShapeType">
+			A collection of connected faces.
+		</constant>
+		<constant name="FACE" value="4" enum="ShapeType">
+			A two-dimensional surface bounded by edges.
+		</constant>
+		<constant name="WIRE" value="5" enum="ShapeType">
+			A collection of connected edges.
+		</constant>
+		<constant name="EDGE" value="6" enum="ShapeType">
+			A one-dimensional curve bounded by vertices.
+		</constant>
+		<constant name="VERTEX" value="7" enum="ShapeType">
+			A zero-dimensional point in space.
+		</constant>
+		<constant name="SHAPE" value="8" enum="ShapeType">
+			Generic shape type or null shape indicator.
+		</constant>
+		<constant name="FORWARD" value="0" enum="Orientation">
+			Standard orientation of the shape.
+		</constant>
+		<constant name="REVERSED" value="1" enum="Orientation">
+			Reversed orientation of the shape.
+		</constant>
+		<constant name="INTERNAL" value="2" enum="Orientation">
+			Internal orientation for shapes inside others.
+		</constant>
+		<constant name="EXTERNAL" value="3" enum="Orientation">
+			External orientation for shapes outside others.
+		</constant>
+	</constants>
+</class>

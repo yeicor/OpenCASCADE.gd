@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ocgd_ShapeAnalyzer" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Comprehensive analysis and measurement utility for OpenCASCADE shapes.
+	</brief_description>
+	<description>
+		Comprehensive analysis and measurement utility for OpenCASCADE shapes. This class provides methods to analyze geometric properties, validate shapes, compute measurements, and extract geometric information from CAD models. It supports both exact analytical calculations and approximation methods for performance-critical applications.
+
+		The analyzer provides capabilities including global properties (mass, volume, surface area, center of mass), geometric measurements (length, area, volume calculations), inertia properties (moments of inertia, principal axes, radius of gyration), bounding box and geometric bounds analysis, shape validation and quality checks, distance and proximity measurements, and geometric feature detection and classification.
+
+		The analyzer supports different computation methods: exact analytical calculations using geometry, triangulation-based approximations for performance, and adaptive precision based on shape complexity.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="analyze_complexity">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Analyze shape complexity. Returns Dictionary with complexity metrics.
+			</description>
+		</method>
+		<method name="analyze_curvature">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get curvature analysis for surfaces. Returns Dictionary with curvature statistics.
+			</description>
+		</method>
+		<method name="analyze_multiple_shapes">
+			<return type="Dictionary" />
+			<param index="0" name="shapes" type="Array" />
+			<description>
+				Analyze multiple shapes and return summary statistics.
+			</description>
+		</method>
+		<method name="compare_shapes">
+			<return type="Dictionary" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Compare two shapes for geometric similarity. Returns Dictionary with similarity metrics.
+			</description>
+		</method>
+		<method name="compute_inertia_properties">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="reference_point" type="Vector3" default="Vector3(0, 0, 0)" />
+			<description>
+				Compute complete inertia properties. Returns Dictionary with inertia matrix, principal axes, moments, radius of gyration.
+			</description>
+		</method>
+		<method name="compute_linear_properties">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Compute linear properties (edge lengths). Returns Dictionary with: "length", "center_of_mass", "mass".
+			</description>
+		</method>
+		<method name="compute_surface_properties">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Compute surface area and surface properties. Returns Dictionary with: "area", "center_of_mass", "mass".
+			</description>
+		</method>
+		<method name="compute_volume_properties">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Compute volume and volumetric properties. Returns Dictionary with: "volume", "center_of_mass", "mass".
+			</description>
+		</method>
+		<method name="detect_features">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Detect geometric features (holes, pockets, bosses, etc.). Returns Array of feature descriptions.
+			</description>
+		</method>
+		<method name="export_analysis_to_string">
+			<return type="String" />
+			<param index="0" name="analysis_data" type="Dictionary" />
+			<param index="1" name="format" type="String" default="&quot;human_readable&quot;" />
+			<description>
+				Export analysis results to formatted string.
+			</description>
+		</method>
+		<method name="find_shapes_by_properties">
+			<return type="Array" />
+			<param index="0" name="shapes" type="Array" />
+			<param index="1" name="target_properties" type="Dictionary" />
+			<param index="2" name="tolerance" type="float" default="0.1" />
+			<description>
+				Find shapes within tolerance of target properties.
+			</description>
+		</method>
+		<method name="get_angular_deflection" qualifiers="const">
+			<return type="float" />
+			<description>
+				Get angular deflection setting.
+			</description>
+		</method>
+		<method name="get_bounding_box">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get axis-aligned bounding box. Returns Dictionary with "min" and "max" Vector3 coordinates.
+			</description>
+		</method>
+		<method name="get_bounding_sphere">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get bounding sphere (minimal sphere enclosing the shape). Returns Dictionary with "center" and "radius".
+			</description>
+		</method>
+		<method name="get_center_of_mass">
+			<return type="Vector3" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get center of mass for the shape.
+			</description>
+		</method>
+		<method name="get_closest_point_on_shape">
+			<return type="Vector3" />
+			<param index="0" name="point" type="Vector3" />
+			<param index="1" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get closest point on shape to given point.
+			</description>
+		</method>
+		<method name="get_closest_points">
+			<return type="Dictionary" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get closest points between two shapes. Returns Dictionary with "point1", "point2", "distance".
+			</description>
+		</method>
+		<method name="get_dimensions">
+			<return type="Vector3" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get shape dimensions (length, width, height of bounding box).
+			</description>
+		</method>
+		<method name="get_distance_between_shapes">
+			<return type="float" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Compute minimum distance between two shapes.
+			</description>
+		</method>
+		<method name="get_distance_point_to_shape">
+			<return type="float" />
+			<param index="0" name="point" type="Vector3" />
+			<param index="1" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get distance from point to shape.
+			</description>
+		</method>
+		<method name="get_full_analysis_report">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get comprehensive analysis report for a shape.
+			</description>
+		</method>
+		<method name="get_high_precision_mode" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get high precision mode setting.
+			</description>
+		</method>
+		<method name="get_linear_deflection" qualifiers="const">
+			<return type="float" />
+			<description>
+				Get linear deflection setting.
+			</description>
+		</method>
+		<method name="get_max_dimension">
+			<return type="float" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get maximum dimension of the shape.
+			</description>
+		</method>
+		<method name="get_min_dimension">
+			<return type="float" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get minimum dimension of the shape.
+			</description>
+		</method>
+		<method name="get_moment_about_axis">
+			<return type="float" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="axis_origin" type="Vector3" />
+			<param index="2" name="axis_direction" type="Vector3" />
+			<description>
+				Get moment of inertia about a specific axis.
+			</description>
+		</method>
+		<method name="get_oriented_bounding_box">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get oriented bounding box (minimal volume enclosing box). Returns Dictionary with "center", "axes", "half_extents".
+			</description>
+		</method>
+		<method name="get_principal_axes">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get principal axes of inertia. Returns Array of three Vector3 direction vectors.
+			</description>
+		</method>
+		<method name="get_principal_moments">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get principal moments of inertia. Returns Array of three principal moment values.
+			</description>
+		</method>
+		<method name="get_quality_metrics">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get shape quality metrics. Returns Dictionary with various quality indicators.
+			</description>
+		</method>
+		<method name="get_radius_of_gyration">
+			<return type="float" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="axis_origin" type="Vector3" />
+			<param index="2" name="axis_direction" type="Vector3" />
+			<description>
+				Get radius of gyration about a specific axis.
+			</description>
+		</method>
+		<method name="get_recommended_mesh_parameters">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get recommended mesh parameters based on shape analysis.
+			</description>
+		</method>
+		<method name="get_shape_signature">
+			<return type="String" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get shape signature for comparison purposes.
+			</description>
+		</method>
+		<method name="get_skip_shared_edges" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get shared edge skipping setting.
+			</description>
+		</method>
+		<method name="get_surface_area">
+			<return type="float" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get just the surface area of a shape.
+			</description>
+		</method>
+		<method name="get_topology_counts">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Count different types of topological entities. Returns Dictionary with counts for vertices, edges, faces, solids, etc.
+			</description>
+		</method>
+		<method name="get_total_length">
+			<return type="float" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get just the total edge length of a shape.
+			</description>
+		</method>
+		<method name="get_use_triangulation" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get triangulation usage setting.
+			</description>
+		</method>
+		<method name="get_volume">
+			<return type="float" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get just the volume of a shape.
+			</description>
+		</method>
+		<method name="is_closed_shell">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Check if shape forms a closed shell.
+			</description>
+		</method>
+		<method name="is_manifold">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Check if shape is manifold (no edge shared by more than 2 faces).
+			</description>
+		</method>
+		<method name="is_valid_solid">
+			<return type="bool" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Check if shape is a valid solid.
+			</description>
+		</method>
+		<method name="set_angular_deflection">
+			<return type="void" />
+			<param index="0" name="deflection" type="float" />
+			<description>
+				Set angular deflection for approximation calculations.
+			</description>
+		</method>
+		<method name="set_high_precision_mode">
+			<return type="void" />
+			<param index="0" name="high_precision" type="bool" />
+			<description>
+				Enable high precision mode for critical measurements.
+			</description>
+		</method>
+		<method name="set_linear_deflection">
+			<return type="void" />
+			<param index="0" name="deflection" type="float" />
+			<description>
+				Set linear deflection for approximation calculations.
+			</description>
+		</method>
+		<method name="set_skip_shared_edges">
+			<return type="void" />
+			<param index="0" name="skip_shared" type="bool" />
+			<description>
+				Set whether to skip shared edges in linear property calculations.
+			</description>
+		</method>
+		<method name="set_use_triangulation">
+			<return type="void" />
+			<param index="0" name="use_triangulation" type="bool" />
+			<description>
+				Set whether to use triangulation for calculations (faster but approximate).
+			</description>
+		</method>
+		<method name="shapes_are_identical">
+			<return type="bool" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<param index="2" name="tolerance" type="float" default="1e-06" />
+			<description>
+				Check if two shapes are geometrically identical within tolerance.
+			</description>
+		</method>
+		<method name="shapes_intersect">
+			<return type="bool" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Check if two shapes intersect.
+			</description>
+		</method>
+		<method name="validate_shape">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Validate shape for geometric consistency. Returns Dictionary with "is_valid", "errors", "warnings".
+			</description>
+		</method>
+	</methods>
+</class>

@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ocgd_PrimitiveShapes" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Utility class for creating basic geometric primitive shapes.
+	</brief_description>
+	<description>
+		Utility class for creating basic geometric primitive shapes in OpenCASCADE. This class provides static-like methods to create common 3D primitives with intuitive parameters. All shapes are created centered at the origin by default, but can be positioned and oriented as needed.
+
+		Supports creation of boxes, spheres, cylinders, cones, torus shapes, wedges, prisms, revolution shapes, and 2D primitives that can be used for extrusion operations. These primitives serve as building blocks for more complex CAD models and can be combined using Boolean operations to create sophisticated geometries.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="create_box">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="width" type="float" />
+			<param index="1" name="height" type="float" />
+			<param index="2" name="depth" type="float" />
+			<param index="3" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<description>
+				Create a rectangular box (cuboid) with specified dimensions. The box is aligned with the coordinate axes.
+			</description>
+		</method>
+		<method name="create_box_from_corners">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="corner1" type="Vector3" />
+			<param index="1" name="corner2" type="Vector3" />
+			<description>
+				Create a box from two opposite corner points. The box will be axis-aligned with edges parallel to coordinate axes.
+			</description>
+		</method>
+		<method name="create_circle">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="radius" type="float" />
+			<param index="1" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<param index="2" name="normal" type="Vector3" default="Vector3(0, 0, 1)" />
+			<description>
+				Create a circular face (2D circle) that can be used for extrusion or other operations.
+			</description>
+		</method>
+		<method name="create_compound">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="shapes" type="Array" />
+			<description>
+				Create a compound shape from multiple shapes. The array should contain ocgd_TopoDS_Shape objects.
+			</description>
+		</method>
+		<method name="create_cone">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="radius1" type="float" />
+			<param index="1" name="radius2" type="float" />
+			<param index="2" name="height" type="float" />
+			<param index="3" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<param index="4" name="axis" type="Vector3" default="Vector3(0, 0, 1)" />
+			<description>
+				Create a cone with different radii at base and top. If radius2 is 0, creates a pointed cone. If radius1 equals radius2, creates a cylinder.
+			</description>
+		</method>
+		<method name="create_cube">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="size" type="float" />
+			<param index="1" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<description>
+				Quick cube creation with equal sides. Equivalent to create_box(size, size, size, center).
+			</description>
+		</method>
+		<method name="create_cylinder">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="radius" type="float" />
+			<param index="1" name="height" type="float" />
+			<param index="2" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<param index="3" name="axis" type="Vector3" default="Vector3(0, 0, 1)" />
+			<description>
+				Create a cylinder with specified radius and height. The axis parameter defines the direction of the cylinder.
+			</description>
+		</method>
+		<method name="create_cylinder_sector">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="radius" type="float" />
+			<param index="1" name="height" type="float" />
+			<param index="2" name="angle" type="float" />
+			<param index="3" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<param index="4" name="axis" type="Vector3" default="Vector3(0, 0, 1)" />
+			<description>
+				Create a partial cylinder (sector) with specified angle in radians. Useful for creating pie-slice shaped cylinders.
+			</description>
+		</method>
+		<method name="create_ellipse">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="radius_x" type="float" />
+			<param index="1" name="radius_y" type="float" />
+			<param index="2" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<param index="3" name="normal" type="Vector3" default="Vector3(0, 0, 1)" />
+			<description>
+				Create an elliptical face (2D ellipse) with different radii along X and Y axes.
+			</description>
+		</method>
+		<method name="create_polygon">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="points" type="Array" />
+			<param index="1" name="closed" type="bool" default="true" />
+			<description>
+				Create a polygonal face from an array of Vector3 points. If closed is true, creates a face; otherwise creates a wire.
+			</description>
+		</method>
+		<method name="create_prism">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="base_shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="direction" type="Vector3" />
+			<description>
+				Create a prism by extruding a base shape (face or wire) along the specified direction vector.
+			</description>
+		</method>
+		<method name="create_rectangle">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="width" type="float" />
+			<param index="1" name="height" type="float" />
+			<param index="2" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<param index="3" name="normal" type="Vector3" default="Vector3(0, 0, 1)" />
+			<description>
+				Create a rectangular face (2D rectangle) that can be used for extrusion or other operations.
+			</description>
+		</method>
+		<method name="create_revolution">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="profile_shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="axis_origin" type="Vector3" />
+			<param index="2" name="axis_direction" type="Vector3" />
+			<param index="3" name="angle" type="float" default="6.28318530718" />
+			<description>
+				Create a revolution shape by rotating a profile (edge, wire, or face) around an axis. Default angle is 2*PI for full revolution.
+			</description>
+		</method>
+		<method name="create_sphere">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="radius" type="float" />
+			<param index="1" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<description>
+				Create a complete sphere with specified radius centered at the given position.
+			</description>
+		</method>
+		<method name="create_sphere_sector">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="radius" type="float" />
+			<param index="1" name="angle_u" type="float" />
+			<param index="2" name="angle_v" type="float" />
+			<param index="3" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<description>
+				Create a partial sphere (sector) with U parameter angle (0 to 2*PI) and V parameter angle (0 to PI).
+			</description>
+		</method>
+		<method name="create_torus">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="major_radius" type="float" />
+			<param index="1" name="minor_radius" type="float" />
+			<param index="2" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<param index="3" name="normal" type="Vector3" default="Vector3(0, 0, 1)" />
+			<description>
+				Create a torus (donut shape) with major radius (distance from center to tube center) and minor radius (tube radius).
+			</description>
+		</method>
+		<method name="create_torus_sector">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="major_radius" type="float" />
+			<param index="1" name="minor_radius" type="float" />
+			<param index="2" name="angle1" type="float" />
+			<param index="3" name="angle2" type="float" />
+			<param index="4" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<param index="5" name="normal" type="Vector3" default="Vector3(0, 0, 1)" />
+			<description>
+				Create a partial torus (sector) between angle1 and angle2 in radians.
+			</description>
+		</method>
+		<method name="create_unit_cube">
+			<return type="ocgd_TopoDS_Shape" />
+			<description>
+				Create a unit cube (1x1x1) centered at the origin. Quick method for creating a standard reference cube.
+			</description>
+		</method>
+		<method name="create_unit_cylinder">
+			<return type="ocgd_TopoDS_Shape" />
+			<description>
+				Create a unit cylinder (radius=0.5, height=1.0) centered at the origin. Quick method for creating a standard reference cylinder.
+			</description>
+		</method>
+		<method name="create_unit_sphere">
+			<return type="ocgd_TopoDS_Shape" />
+			<description>
+				Create a unit sphere (radius=0.5) centered at the origin. Quick method for creating a standard reference sphere.
+			</description>
+		</method>
+		<method name="create_wedge">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="dx" type="float" />
+			<param index="1" name="dy" type="float" />
+			<param index="2" name="dz" type="float" />
+			<param index="3" name="xmin" type="float" />
+			<param index="4" name="zmin" type="float" />
+			<param index="5" name="xmax" type="float" />
+			<param index="6" name="zmax" type="float" />
+			<param index="7" name="center" type="Vector3" default="Vector3(0, 0, 0)" />
+			<description>
+				Create a wedge (triangular prism) with specified dimensions and slanted face parameters.
+			</description>
+		</method>
+		<method name="get_primitive_info">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get information about a primitive shape including its type, parameters, and characteristics.
+			</description>
+		</method>
+		<method name="get_recommended_mesh_params">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="quality_level" type="float" default="0.5" />
+			<description>
+				Get recommended mesh parameters for a primitive shape based on quality level (0.0 = coarse, 1.0 = fine).
+			</description>
+		</method>
+		<method name="validate_primitive_parameters">
+			<return type="Dictionary" />
+			<param index="0" name="primitive_type" type="String" />
+			<param index="1" name="parameters" type="Dictionary" />
+			<description>
+				Validate that primitive parameters are valid for the specified primitive type. Returns validation results.
+			</description>
+		</method>
+	</methods>
+</class>

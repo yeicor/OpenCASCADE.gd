@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ocgd_TopExp_Explorer" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Tool to visit and explore topological data structures.
+	</brief_description>
+	<description>
+		Wrapper class to expose the OpenCASCADE TopExp_Explorer to Godot. An Explorer is a Tool to visit a Topological Data Structure from the TopoDS package. The Explorer visits all the structure to find shapes of the requested type which are not contained in the type to avoid.
+
+		An Explorer is built with the Shape to explore, the type of Shapes to find (e.g VERTEX, EDGE), and optionally the type of Shapes to avoid (e.g SHELL, EDGE). By default the avoid type is SHAPE which means no restriction on the exploration.
+
+		Example usage: Create explorer, initialize with shape and search criteria, then iterate through results using more(), current(), and next() methods.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clear">
+			<return type="void" />
+			<description>
+				Clears the content of the explorer. It will return false on more().
+			</description>
+		</method>
+		<method name="current" qualifiers="const">
+			<return type="ocgd_TopoDS_Shape" />
+			<description>
+				Returns the current shape in the exploration. Throws exception if this explorer has no more shapes to explore.
+			</description>
+		</method>
+		<method name="depth" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the current depth of the exploration. 0 is the shape to explore itself.
+			</description>
+		</method>
+		<method name="explored_shape" qualifiers="const">
+			<return type="ocgd_TopoDS_Shape" />
+			<description>
+				Return explored shape.
+			</description>
+		</method>
+		<method name="init">
+			<return type="void" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="to_find" type="int" />
+			<param index="2" name="to_avoid" type="int" default="8" />
+			<description>
+				Creates an Explorer on the Shape. to_find is the type of shapes to search (TopAbs_VERTEX, TopAbs_EDGE, etc.). to_avoid is the type of shape to skip in the exploration. If to_avoid is equal or less complex than to_find or if to_avoid is SHAPE it has no effect on the exploration.
+			</description>
+		</method>
+		<method name="more" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns true if there are more shapes in the exploration.
+			</description>
+		</method>
+		<method name="next">
+			<return type="void" />
+			<description>
+				Moves to the next Shape in the exploration. Throws exception if there are no more shapes to explore.
+			</description>
+		</method>
+		<method name="re_init">
+			<return type="void" />
+			<description>
+				Reinitialize the exploration with the original arguments.
+			</description>
+		</method>
+		<method name="value" qualifiers="const">
+			<return type="ocgd_TopoDS_Shape" />
+			<description>
+				Returns the current shape in the exploration (alias for current). Throws exception if this explorer has no more shapes to explore.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="COMPOUND" value="0" enum="ShapeType">
+			A compound shape containing multiple shapes.
+		</constant>
+		<constant name="COMPSOLID" value="1" enum="ShapeType">
+			A composite solid made of multiple solids.
+		</constant>
+		<constant name="SOLID" value="2" enum="ShapeType">
+			A solid shape with volume.
+		</constant>
+		<constant name="SHELL" value="3" enum="ShapeType">
+			A shell composed of connected faces.
+		</constant>
+		<constant name="FACE" value="4" enum="ShapeType">
+			A face bounded by wires.
+		</constant>
+		<constant name="WIRE" value="5" enum="ShapeType">
+			A wire composed of connected edges.
+		</constant>
+		<constant name="EDGE" value="6" enum="ShapeType">
+			An edge connecting two vertices.
+		</constant>
+		<constant name="VERTEX" value="7" enum="ShapeType">
+			A vertex (point) in 3D space.
+		</constant>
+		<constant name="SHAPE" value="8" enum="ShapeType">
+			Generic shape type (used for null shapes).
+		</constant>
+	</constants>
+</class>

@@ -11,65 +11,19 @@
 #include <godot_cpp/godot.hpp>
 #include <godot_cpp/core/class_db.hpp>
 
-#include "ocgd_Aspect_TypeOfLine.h"
-#include "ocgd_TopAbs_ShapeEnum.h"
-#include "ocgd_TopAbs_Orientation.h"
-#include "ocgd_Aspect_TypeOfMarker.h"
-#include "ocgd_TopAbs_State.h"
-#include "ocgd_GeomAbs_Shape.h"
-#include "ocgd_GeomAbs_CurveType.h"
-#include "ocgd_GeomAbs_SurfaceType.h"
-#include "ocgd_GeomAbs_BSplKnotDistribution.h"
-#include "ocgd_GeomAbs_IsoType.h"
-#include "ocgd_GeomAbs_JoinType.h"
-#include "ocgd_gp_TrsfForm.h"
-#include "ocgd_gp_EulerSequence.h"
-#include "ocgd_gp_XY.h"
-#include "ocgd_gp_XYZ.h"
-#include "ocgd_gp_Pnt2d.h"
-#include "ocgd_gp_Pnt.h"
-#include "ocgd_gp_Dir.h"
-#include "ocgd_gp_Dir2d.h"
-#include "ocgd_gp_Vec.h"
-#include "ocgd_gp_Vec2d.h"
-#include "ocgd_gp_Lin.h"
-#include "ocgd_gp_Lin2d.h"
-#include "ocgd_gp_Ax22d.h"
-#include "ocgd_gp_Ax2d.h"
-#include "ocgd_gp_Ax1.h"
-#include "ocgd_gp_Ax2.h"
-#include "ocgd_gp_Ax3.h"
-#include "ocgd_gp_Mat.h"
-#include "ocgd_gp_Mat2d.h"
-#include "ocgd_gp_Trsf.h"
-#include "ocgd_gp_Trsf2d.h"
-#include "ocgd_gp_Circ.h"
-#include "ocgd_gp_Sphere.h"
-#include "ocgd_gp_Cylinder.h"
-#include "ocgd_gp_Cone.h"
-#include "ocgd_gp_Elips.h"
-#include "ocgd_gp_Parab.h"
-#include "ocgd_gp_Hypr.h"
-#include "ocgd_gp_Quaternion.h"
-#include "ocgd_gp_Circ2d.h"
-#include "ocgd_gp_Elips2d.h"
-#include "ocgd_gp_Parab2d.h"
-#include "ocgd_gp_Pln.h"
-
-#include "ocgd_Quantity_NameOfColor.h"
-
-#include "ocgd_Geom_Geometry.h"
-#include "ocgd_Geom_Point.h"
-#include "ocgd_Geom_Vector.h"
-#include "ocgd_Geom_Curve.h"
-#include "ocgd_Geom_Surface.h"
-#include "ocgd_Geom_CartesianPoint.h"
-#include "ocgd_Geom_Direction.h"
-#include "ocgd_Geom_Line.h"
-#include "ocgd_Geom_Conic.h"
-#include "ocgd_Geom_Circle.h"
-
-// Example: #include "classes/ocgd_Standard.h"
+#include "ocgd_STEPCAFControl_Reader.hxx"
+#include "ocgd_TopoDS_Shape.hxx"
+#include "ocgd_TopExp_Explorer.hxx"
+#include "ocgd_BRepMesh_IncrementalMesh.hxx"
+#include "ocgd_MeshDataExtractor.hxx"
+#include "ocgd_STLExporter.hxx"
+#include "ocgd_ShapeAnalyzer.hxx"
+#include "ocgd_IGESReader.hxx"
+#include "ocgd_PrimitiveShapes.hxx"
+#include "ocgd_BooleanOperations.hxx"
+#include "ocgd_AdvancedMeshExporter.hxx"
+#include "ocgd_TopologyAnalyzer.hxx"
+#include "ocgd_CADFileImporter.hxx"
 
 using namespace godot;
 
@@ -79,64 +33,19 @@ void ocgd_initialize_module(ModuleInitializationLevel p_level) {
     }
 
     // Register wrapped classes
-    GDREGISTER_CLASS(ocgd_Aspect_TypeOfLine);
-    GDREGISTER_CLASS(ocgd_TopAbs_ShapeEnum);
-    GDREGISTER_CLASS(ocgd_TopAbs_Orientation);
-    GDREGISTER_CLASS(ocgd_Aspect_TypeOfMarker);
-    GDREGISTER_CLASS(ocgd_TopAbs_State);
-    GDREGISTER_CLASS(ocgd_GeomAbs_Shape);
-    GDREGISTER_CLASS(ocgd_GeomAbs_CurveType);
-    GDREGISTER_CLASS(ocgd_Quantity_NameOfColor);
-    GDREGISTER_CLASS(ocgd_GeomAbs_SurfaceType);
-    GDREGISTER_CLASS(ocgd_GeomAbs_BSplKnotDistribution);
-    GDREGISTER_CLASS(ocgd_GeomAbs_IsoType);
-    GDREGISTER_CLASS(ocgd_GeomAbs_JoinType);
-    GDREGISTER_CLASS(ocgd_gp_TrsfForm);
-    GDREGISTER_CLASS(ocgd_gp_EulerSequence);
-    GDREGISTER_CLASS(ocgd_gp_XY);
-    GDREGISTER_CLASS(ocgd_gp_XYZ);
-    GDREGISTER_CLASS(ocgd_gp_Pnt2d);
-    GDREGISTER_CLASS(ocgd_gp_Pnt);
-    GDREGISTER_CLASS(ocgd_gp_Dir);
-    GDREGISTER_CLASS(ocgd_gp_Dir2d);
-    GDREGISTER_CLASS(ocgd_gp_Vec);
-    GDREGISTER_CLASS(ocgd_gp_Vec2d);
-    GDREGISTER_CLASS(ocgd_gp_Lin);
-    GDREGISTER_CLASS(ocgd_gp_Lin2d);
-    GDREGISTER_CLASS(ocgd_gp_Ax22d);
-    GDREGISTER_CLASS(ocgd_gp_Ax2d);
-    GDREGISTER_CLASS(ocgd_gp_Ax1);
-    GDREGISTER_CLASS(ocgd_gp_Ax2);
-    GDREGISTER_CLASS(ocgd_gp_Ax3);
-    GDREGISTER_CLASS(ocgd_gp_Mat);
-    GDREGISTER_CLASS(ocgd_gp_Mat2d);
-    GDREGISTER_CLASS(ocgd_gp_Trsf);
-    GDREGISTER_CLASS(ocgd_gp_Trsf2d);
-    GDREGISTER_CLASS(ocgd_gp_Circ);
-    GDREGISTER_CLASS(ocgd_gp_Sphere);
-    GDREGISTER_CLASS(ocgd_gp_Cylinder);
-    GDREGISTER_CLASS(ocgd_gp_Cone);
-    GDREGISTER_CLASS(ocgd_gp_Elips);
-    GDREGISTER_CLASS(ocgd_gp_Parab);
-    GDREGISTER_CLASS(ocgd_gp_Hypr);
-    GDREGISTER_CLASS(ocgd_gp_Quaternion);
-    GDREGISTER_CLASS(ocgd_gp_Circ2d);
-    GDREGISTER_CLASS(ocgd_gp_Elips2d);
-    GDREGISTER_CLASS(ocgd_gp_Parab2d);
-    GDREGISTER_CLASS(ocgd_gp_Pln);
-
-    GDREGISTER_CLASS(OCGDGeom_Geometry);
-    GDREGISTER_CLASS(OCGDGeom_Point);
-    GDREGISTER_CLASS(OCGDGeom_Vector);
-    GDREGISTER_CLASS(OCGDGeom_Curve);
-    GDREGISTER_CLASS(OCGDGeom_Surface);
-    GDREGISTER_CLASS(OCGDGeom_CartesianPoint);
-    GDREGISTER_CLASS(OCGDGeom_Direction);
-    GDREGISTER_CLASS(OCGDGeom_Line);
-    GDREGISTER_CLASS(OCGDGeom_Conic);
-    GDREGISTER_CLASS(OCGDGeom_Circle);
-
-    // Example: GDREGISTER_CLASS(ocgd_Standard);
+    GDREGISTER_CLASS(ocgd_STEPCAFControl_Reader);
+    GDREGISTER_CLASS(ocgd_TopoDS_Shape);
+    GDREGISTER_CLASS(ocgd_TopExp_Explorer);
+    GDREGISTER_CLASS(ocgd_BRepMesh_IncrementalMesh);
+    GDREGISTER_CLASS(ocgd_MeshDataExtractor);
+    GDREGISTER_CLASS(ocgd_STLExporter);
+    GDREGISTER_CLASS(ocgd_ShapeAnalyzer);
+    GDREGISTER_CLASS(ocgd_IGESReader);
+    GDREGISTER_CLASS(ocgd_PrimitiveShapes);
+    GDREGISTER_CLASS(ocgd_BooleanOperations);
+    GDREGISTER_CLASS(ocgd_AdvancedMeshExporter);
+    GDREGISTER_CLASS(ocgd_TopologyAnalyzer);
+    GDREGISTER_CLASS(ocgd_CADFileImporter);
 }
 
 void ocgd_uninitialize_module(ModuleInitializationLevel p_level) {

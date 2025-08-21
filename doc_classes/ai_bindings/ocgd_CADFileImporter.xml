@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ocgd_CADFileImporter" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Comprehensive CAD file importer with advanced metadata support.
+	</brief_description>
+	<description>
+		Comprehensive CAD file importer with advanced metadata support. This class provides a unified interface for importing various CAD file formats with comprehensive support for colors, materials, assembly structures, and metadata extraction.
+
+		Supports multiple CAD formats including STEP, IGES, BREP, STL, OBJ, and PLY with format auto-detection and validation. Features include color and material information extraction, metadata and properties reading, assembly structure preservation, unit conversion and scaling, progress monitoring and error reporting, batch import capabilities, and quality validation and repair.
+
+		Provides XCAF (Extended CAF) support for colors and materials, layer and group information extraction, custom properties and attributes reading, assembly hierarchy with positioning, geometric validation and repair options, memory-efficient streaming for large files, and multi-threaded processing support.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="analyze_file">
+			<return type="Dictionary" />
+			<param index="0" name="file_path" type="String" />
+			<description>
+				Get file format information without importing. Returns dictionary with file characteristics and metadata.
+			</description>
+		</method>
+		<method name="cancel_import">
+			<return type="void" />
+			<description>
+				Cancel ongoing import operation.
+			</description>
+		</method>
+		<method name="clear_messages">
+			<return type="void" />
+			<description>
+				Clear error and warning states.
+			</description>
+		</method>
+		<method name="convert_units" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="value" type="float" />
+			<param index="1" name="from_units" type="int" enum="ocgd_CADFileImporter.UnitType" />
+			<param index="2" name="to_units" type="int" enum="ocgd_CADFileImporter.UnitType" />
+			<description>
+				Convert units between different systems. Returns the converted value.
+			</description>
+		</method>
+		<method name="detect_format" qualifiers="const">
+			<return type="int" enum="ocgd_CADFileImporter.ImportFormat" />
+			<param index="0" name="file_path" type="String" />
+			<description>
+				Detect format from file extension or content.
+			</description>
+		</method>
+		<method name="get_all_properties" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get all custom properties from file.
+			</description>
+		</method>
+		<method name="get_assembly_structure" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get assembly structure from last import.
+			</description>
+		</method>
+		<method name="get_color_information" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get color information for all shapes.
+			</description>
+		</method>
+		<method name="get_face_colors" qualifiers="const">
+			<return type="PackedColorArray" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get colors for all faces of a shape.
+			</description>
+		</method>
+		<method name="get_file_metadata" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get file metadata (author, creation date, units, etc.).
+			</description>
+		</method>
+		<method name="get_fix_geometry" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get automatic geometry fixing setting.
+			</description>
+		</method>
+		<method name="get_import_format" qualifiers="const">
+			<return type="int" enum="ocgd_CADFileImporter.ImportFormat" />
+			<description>
+				Get current import format setting.
+			</description>
+		</method>
+		<method name="get_import_mode" qualifiers="const">
+			<return type="int" enum="ocgd_CADFileImporter.ImportMode" />
+			<description>
+				Get current import mode setting.
+			</description>
+		</method>
+		<method name="get_import_quality_report" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get import quality report.
+			</description>
+		</method>
+		<method name="get_import_statistics" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get import statistics from last operation.
+			</description>
+		</method>
+		<method name="get_last_error" qualifiers="const">
+			<return type="String" />
+			<description>
+				Get last error message.
+			</description>
+		</method>
+		<method name="get_last_warning" qualifiers="const">
+			<return type="String" />
+			<description>
+				Get last warning message.
+			</description>
+		</method>
+		<method name="get_layer_information" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get layer information.
+			</description>
+		</method>
+		<method name="get_material_information" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get material information for all shapes.
+			</description>
+		</method>
+		<method name="get_progress" qualifiers="const">
+			<return type="int" />
+			<description>
+				Get import progress (0-100).
+			</description>
+		</method>
+		<method name="get_read_assembly_structure" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get assembly structure preservation setting.
+			</description>
+		</method>
+		<method name="get_read_colors" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get color information reading setting.
+			</description>
+		</method>
+		<method name="get_read_layers" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get layer information reading setting.
+			</description>
+		</method>
+		<method name="get_read_materials" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get material information reading setting.
+			</description>
+		</method>
+		<method name="get_read_metadata" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get metadata reading setting.
+			</description>
+		</method>
+		<method name="get_repair_level" qualifiers="const">
+			<return type="int" enum="ocgd_CADFileImporter.RepairLevel" />
+			<description>
+				Get current geometry repair level setting.
+			</description>
+		</method>
+		<method name="get_repair_operations" qualifiers="const">
+			<return type="Array" />
+			<description>
+				Get repair operations performed.
+			</description>
+		</method>
+		<method name="get_scaling_factor" qualifiers="const">
+			<return type="float" />
+			<description>
+				Get current custom scaling factor.
+			</description>
+		</method>
+		<method name="get_shape_by_name" qualifiers="const">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="name" type="String" />
+			<description>
+				Get shape by name or label.
+			</description>
+		</method>
+		<method name="get_shape_color" qualifiers="const">
+			<return type="Color" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get color for specific shape.
+			</description>
+		</method>
+		<method name="get_shape_hierarchy" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get shape hierarchy with names and labels.
+			</description>
+		</method>
+		<method name="get_shape_material" qualifiers="const">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get material properties for shape.
+			</description>
+		</method>
+		<method name="get_shape_names" qualifiers="const">
+			<return type="PackedStringArray" />
+			<description>
+				Get all shape names and labels.
+			</description>
+		</method>
+		<method name="get_shape_properties" qualifiers="const">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get custom properties for shape.
+			</description>
+		</method>
+		<method name="get_supported_extensions" qualifiers="const">
+			<return type="PackedStringArray" />
+			<param index="0" name="format" type="int" enum="ocgd_CADFileImporter.ImportFormat" />
+			<description>
+				Get supported file extensions for format.
+			</description>
+		</method>
+		<method name="get_target_units" qualifiers="const">
+			<return type="int" enum="ocgd_CADFileImporter.UnitType" />
+			<description>
+				Get current target units setting.
+			</description>
+		</method>
+		<method name="get_tolerance" qualifiers="const">
+			<return type="float" />
+			<description>
+				Get current geometric tolerance setting.
+			</description>
+		</method>
+		<method name="get_units_information" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get units information from file.
+			</description>
+		</method>
+		<method name="get_validate_geometry" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Get geometry validation setting.
+			</description>
+		</method>
+		<method name="get_validation_results" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Get geometry validation results.
+			</description>
+		</method>
+		<method name="import_file">
+			<return type="ocgd_TopoDS_Shape" />
+			<param index="0" name="file_path" type="String" />
+			<description>
+				Import CAD file and return primary shape.
+			</description>
+		</method>
+		<method name="import_file_multiple">
+			<return type="Array" />
+			<param index="0" name="file_path" type="String" />
+			<description>
+				Import CAD file and return all shapes as an array.
+			</description>
+		</method>
+		<method name="import_file_with_metadata">
+			<return type="Dictionary" />
+			<param index="0" name="file_path" type="String" />
+			<description>
+				Import CAD file with full metadata extraction. Returns dictionary with shapes, colors, materials, and metadata.
+			</description>
+		</method>
+		<method name="import_files_batch">
+			<return type="Array" />
+			<param index="0" name="file_paths" type="PackedStringArray" />
+			<description>
+				Import multiple files in batch. Returns array of import results.
+			</description>
+		</method>
+		<method name="is_cancelled" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Check if operation was cancelled.
+			</description>
+		</method>
+		<method name="reset_settings">
+			<return type="void" />
+			<description>
+				Reset importer to default settings.
+			</description>
+		</method>
+		<method name="set_fix_geometry">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+				Enable/disable automatic geometry fixing.
+			</description>
+		</method>
+		<method name="set_import_format">
+			<return type="void" />
+			<param index="0" name="format" type="int" enum="ocgd_CADFileImporter.ImportFormat" />
+			<description>
+				Set import format (auto-detection if not specified).
+			</description>
+		</method>
+		<method name="set_import_mode">
+			<return type="void" />
+			<param index="0" name="mode" type="int" enum="ocgd_CADFileImporter.ImportMode" />
+			<description>
+				Set import mode for handling multiple shapes.
+			</description>
+		</method>
+		<method name="set_read_assembly_structure">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+				Enable/disable assembly structure preservation.
+			</description>
+		</method>
+		<method name="set_read_colors">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+				Enable/disable color information reading.
+			</description>
+		</method>
+		<method name="set_read_layers">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+				Enable/disable layer information reading.
+			</description>
+		</method>
+		<method name="set_read_materials">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+				Enable/disable material information reading.
+			</description>
+		</method>
+		<method name="set_read_metadata">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+				Enable/disable metadata reading.
+			</description>
+		</method>
+		<method name="set_repair_level">
+			<return type="void" />
+			<param index="0" name="level" type="int" enum="ocgd_CADFileImporter.RepairLevel" />
+			<description>
+				Set geometry repair level.
+			</description>
+		</method>
+		<method name="set_scaling_factor">
+			<return type="void" />
+			<param index="0" name="factor" type="float" />
+			<description>
+				Set custom scaling factor.
+			</description>
+		</method>
+		<method name="set_target_units">
+			<return type="void" />
+			<param index="0" name="units" type="int" enum="ocgd_CADFileImporter.UnitType" />
+			<description>
+				Set target units for conversion.
+			</description>
+		</method>
+		<method name="set_tolerance">
+			<return type="void" />
+			<param index="0" name="tolerance" type="float" />
+			<description>
+				Set geometric tolerance.
+			</description>
+		</method>
+		<method name="set_validate_geometry">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+				Enable/disable geometry validation.
+			</description>
+		</method>
+		<method name="validate_file">
+			<return type="Dictionary" />
+			<param index="0" name="file_path" type="String" />
+			<description>
+				Validate file before import. Returns dictionary with validation results.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="FORMAT_AUTO" value="0" enum="ImportFormat">
+			Auto-detect format from file extension.
+		</constant>
+		<constant name="FORMAT_STEP" value="1" enum="ImportFormat">
+			STEP format (.step, .stp).
+		</constant>
+		<constant name="FORMAT_IGES" value="2" enum="ImportFormat">
+			IGES format (.iges, .igs).
+		</constant>
+		<constant name="FORMAT_BREP" value="3" enum="ImportFormat">
+			OpenCASCADE BREP format (.brep).
+		</constant>
+		<constant name="FORMAT_STL" value="4" enum="ImportFormat">
+			STL format (.stl).
+		</constant>
+		<constant name="FORMAT_OBJ" value="5" enum="ImportFormat">
+			Wavefront OBJ format (.obj).
+		</constant>
+		<constant name="FORMAT_PLY" value="6" enum="ImportFormat">
+			Stanford PLY format (.ply).
+		</constant>
+		<constant name="MODE_SINGLE_SHAPE" value="0" enum="ImportMode">
+			Merge all shapes into single compound.
+		</constant>
+		<constant name="MODE_ASSEMBLY" value="1" enum="ImportMode">
+			Preserve assembly structure.
+		</constant>
+		<constant name="MODE_SEPARATE_SHAPES" value="2" enum="ImportMode">
+			Import as separate shapes.
+		</constant>
+		<constant name="UNIT_MILLIMETER" value="0" enum="UnitType">
+			Millimeter units.
+		</constant>
+		<constant name="UNIT_CENTIMETER" value="1" enum="UnitType">
+			Centimeter units.
+		</constant>
+		<constant name="UNIT_METER" value="2" enum="UnitType">
+			Meter units.
+		</constant>
+		<constant name="UNIT_INCH" value="3" enum="UnitType">
+			Inch units.
+		</constant>
+		<constant name="UNIT_FOOT" value="4" enum="UnitType">
+			Foot units.
+		</constant>
+		<constant name="UNIT_AUTO" value="5" enum="UnitType">
+			Use file's native units.
+		</constant>
+		<constant name="REPAIR_NONE" value="0" enum="RepairLevel">
+			No repair.
+		</constant>
+		<constant name="REPAIR_BASIC" value="1" enum="RepairLevel">
+			Basic topology fixes.
+		</constant>
+		<constant name="REPAIR_ADVANCED" value="2" enum="RepairLevel">
+			Advanced geometry repair.
+		</constant>
+		<constant name="REPAIR_COMPLETE" value="3" enum="RepairLevel">
+			Complete rebuild if necessary.
+		</constant>
+	</constants>
+</class>

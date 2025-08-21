@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ocgd_TopologyAnalyzer" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Advanced topology analysis for OpenCASCADE shapes.
+	</brief_description>
+	<description>
+		Godot GDExtension wrapper for OpenCASCADE comprehensive topology analysis. This class provides advanced topology analysis capabilities including detailed shape hierarchy exploration, geometric property analysis (areas, volumes, lengths), connectivity analysis between topology elements, shape classification and validation, advanced measurement tools (distances, angles, curvature), cross-sectional analysis, feature recognition and classification, and quality assessment and mesh analysis.
+
+		Features include complete topology traversal with detailed statistics, multi-level shape analysis (solid, shell, face, wire, edge, vertex), geometric calculations with high precision, spatial relationship analysis between elements, feature detection (holes, fillets, chamfers, etc.), shape comparison and similarity analysis, manufacturing analysis (undercuts, draft angles, etc.), and export capabilities for analysis results.
+
+		This analyzer provides comprehensive tools for understanding the structure and properties of CAD geometry, essential for validation, optimization, and manufacturing analysis workflows.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="analyze_connectivity">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Analyze connectivity between topology elements. Returns dictionary with connectivity information including adjacent faces, shared edges, and vertex connections.
+			</description>
+		</method>
+		<method name="analyze_curvature_distribution">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Analyze curvature distribution across shape surfaces. Returns dictionary with curvature statistics, gaussian curvature, and mean curvature information.
+			</description>
+		</method>
+		<method name="analyze_draft_angles">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="draft_direction" type="Vector3" />
+			<param index="2" name="min_angle" type="float" default="1.0" />
+			<description>
+				Analyze draft angles for manufacturing. Returns dictionary with faces that have insufficient draft angles for the given direction.
+			</description>
+		</method>
+		<method name="analyze_shape_hierarchy">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Analyze complete shape hierarchy with detailed statistics. Returns dictionary with counts and relationships for all topology levels.
+			</description>
+		</method>
+		<method name="analyze_thickness_variation">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="sampling_density" type="float" default="1.0" />
+			<description>
+				Analyze thickness variation in shell/solid shapes. Returns dictionary with thickness measurements and variation statistics.
+			</description>
+		</method>
+		<method name="analyze_undercuts">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="tool_direction" type="Vector3" />
+			<description>
+				Analyze undercuts for manufacturing purposes. Returns dictionary with faces that create undercuts in the given tool direction.
+			</description>
+		</method>
+		<method name="classify_edges">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Classify edges by type (straight, circular, spline, etc.). Returns dictionary with edge classifications and statistics.
+			</description>
+		</method>
+		<method name="classify_faces">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Classify faces by type (planar, cylindrical, spherical, etc.). Returns dictionary with face classifications and statistics.
+			</description>
+		</method>
+		<method name="compute_cross_section">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="plane_origin" type="Vector3" />
+			<param index="2" name="plane_normal" type="Vector3" />
+			<description>
+				Compute cross-section of shape with a plane. Returns dictionary with cross-section curves, areas, and geometric properties.
+			</description>
+		</method>
+		<method name="compute_edge_angles">
+			<return type="PackedFloat32Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Compute angles between adjacent faces along edges. Returns array of angle values in radians.
+			</description>
+		</method>
+		<method name="detect_chamfers">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="min_size" type="float" default="0.1" />
+			<description>
+				Detect chamfer features in the shape. Returns array of dictionaries describing detected chamfers.
+			</description>
+		</method>
+		<method name="detect_fillets">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="min_radius" type="float" default="0.1" />
+			<description>
+				Detect fillet features in the shape. Returns array of dictionaries describing detected fillets with radius information.
+			</description>
+		</method>
+		<method name="detect_holes">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="min_diameter" type="float" default="0.1" />
+			<description>
+				Detect hole features in the shape. Returns array of dictionaries describing detected holes with diameter and depth information.
+			</description>
+		</method>
+		<method name="detect_pockets">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="min_depth" type="float" default="0.1" />
+			<description>
+				Detect pocket features in the shape. Returns array of dictionaries describing detected pockets.
+			</description>
+		</method>
+		<method name="find_face_loops">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Find and analyze face loops (outer and inner boundaries). Returns dictionary with loop information for each face.
+			</description>
+		</method>
+		<method name="find_sharp_edges">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="max_angle" type="float" default="0.5" />
+			<description>
+				Find sharp edges based on angle threshold. Returns array of edge information with angle measurements.
+			</description>
+		</method>
+		<method name="get_adjacency_matrix">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="element_type" type="int" />
+			<description>
+				Get adjacency matrix for topology elements of specified type. Returns 2D array representing element connections.
+			</description>
+		</method>
+		<method name="get_all_edges">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get all edges in the shape with detailed information. Returns array of edge dictionaries with geometric properties.
+			</description>
+		</method>
+		<method name="get_all_faces">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get all faces in the shape with detailed information. Returns array of face dictionaries with geometric properties.
+			</description>
+		</method>
+		<method name="get_all_vertices">
+			<return type="Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get all vertices in the shape with detailed information. Returns array of vertex dictionaries with coordinates and connectivity.
+			</description>
+		</method>
+		<method name="get_analysis_precision" qualifiers="const">
+			<return type="float" />
+			<description>
+				Get the current analysis precision setting.
+			</description>
+		</method>
+		<method name="get_boundary_analysis">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get boundary analysis including free edges, boundary vertices, and closure information.
+			</description>
+		</method>
+		<method name="get_element_count">
+			<return type="int" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="element_type" type="int" />
+			<description>
+				Get count of specific topology elements in the shape. Use ShapeType enum values for element_type.
+			</description>
+		</method>
+		<method name="get_feature_tree">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get hierarchical feature tree showing shape decomposition and relationships.
+			</description>
+		</method>
+		<method name="get_geometric_tolerance" qualifiers="const">
+			<return type="float" />
+			<description>
+				Get the current geometric tolerance setting.
+			</description>
+		</method>
+		<method name="get_manufacturing_analysis">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="process_type" type="String" default="&quot;milling&quot;" />
+			<description>
+				Get manufacturing analysis for specified process type (milling, turning, casting, etc.).
+			</description>
+		</method>
+		<method name="get_shape_complexity">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get shape complexity metrics including topology complexity, geometric complexity, and feature count.
+			</description>
+		</method>
+		<method name="get_topology_signature">
+			<return type="String" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Get unique topology signature for shape comparison and caching purposes.
+			</description>
+		</method>
+		<method name="measure_distances_between_elements">
+			<return type="Dictionary" />
+			<param index="0" name="shape1" type="ocgd_TopoDS_Shape" />
+			<param index="1" name="shape2" type="ocgd_TopoDS_Shape" />
+			<description>
+				Measure distances between topology elements of two shapes. Returns dictionary with minimum, maximum, and average distances.
+			</description>
+		</method>
+		<method name="measure_face_areas">
+			<return type="PackedFloat32Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Measure areas of all faces in the shape. Returns array of area values.
+			</description>
+		</method>
+		<method name="measure_edge_lengths">
+			<return type="PackedFloat32Array" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Measure lengths of all edges in the shape. Returns array of length values.
+			</description>
+		</method>
+		<method name="set_analysis_precision">
+			<return type="void" />
+			<param index="0" name="precision" type="float" />
+			<description>
+				Set precision for analysis calculations. Higher values provide more accurate but slower analysis.
+			</description>
+		</method>
+		<method name="set_geometric_tolerance">
+			<return type="void" />
+			<param index="0" name="tolerance" type="float" />
+			<description>
+				Set geometric tolerance for analysis operations.
+			</description>
+		</method>
+		<method name="validate_topology">
+			<return type="Dictionary" />
+			<param index="0" name="shape" type="ocgd_TopoDS_Shape" />
+			<description>
+				Validate topology consistency and report issues. Returns dictionary with validation results and error descriptions.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="COMPOUND" value="0" enum="ShapeType">
+			A compound shape containing multiple shapes.
+		</constant>
+		<constant name="COMPSOLID" value="1" enum="ShapeType">
+			A composite solid made of multiple solids.
+		</constant>
+		<constant name="SOLID" value="2" enum="ShapeType">
+			A solid shape with volume.
+		</constant>
+		<constant name="SHELL" value="3" enum="ShapeType">
+			A shell composed of connected faces.
+		</constant>
+		<constant name="FACE" value="4" enum="ShapeType">
+			A face bounded by wires.
+		</constant>
+		<constant name="WIRE" value="5" enum="ShapeType">
+			A wire composed of connected edges.
+		</constant>
+		<constant name="EDGE" value="6" enum="ShapeType">
+			An edge connecting two vertices.
+		</constant>
+		<constant name="VERTEX" value="7" enum="ShapeType">
+			A vertex (point) in 3D space.
+		</constant>
+		<constant name="SHAPE" value="8" enum="ShapeType">
+			Generic shape type (used for null shapes).
+		</constant>
+	</constants>
+</class>
