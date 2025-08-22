@@ -23,6 +23,7 @@
 #include <opencascade/gp_Dir.hxx>
 #include <opencascade/gp_Pnt.hxx>
 #include <opencascade/TopAbs.hxx>
+#include <vector>
 
 using namespace godot;
 
