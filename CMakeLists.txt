@@ -5,6 +5,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(OpenCASCADE.gd CXX)
 
+# Syntax-only mode for fast builds (only checks syntax, does not link or install)
+if(SYNTAX_ONLY)
+    message(STATUS "SYNTAX_ONLY mode enabled: Only checking syntax, skipping linking and installation.")
+endif()
+
 # Check that both CMAKE_BUILD_TYPE and GODOTCPP_TARGET are set correctly (always required)
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(FATAL_ERROR "CMAKE_BUILD_TYPE must be either 'Release' or 'Debug'. Current value: ${CMAKE_BUILD_TYPE}")
@@ -92,18 +97,30 @@ endif()
 
 # Define the shared library target
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/**/*.cpp")
-add_library(${PROJECT_NAME} SHARED ${SOURCES} ${DOC_GEN_FILE})
-target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
+if(SYNTAX_ONLY)
+    # Syntax-only mode: Compile sources as OBJECT library, do not link or install
+    add_library(${PROJECT_NAME}_syntax_only OBJECT ${SOURCES} ${DOC_GEN_FILE})
+    target_include_directories(${PROJECT_NAME}_syntax_only PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME}_syntax_only PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
+    target_compile_options(${PROJECT_NAME}_syntax_only PRIVATE
+        $<$<CXX_COMPILER_ID:GNU,Clang>:-fsyntax-only>
+        $<$<CXX_COMPILER_ID:MSVC>:/Zs>
+    )
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/") # No-op installation
+else()
+    add_library(${PROJECT_NAME} SHARED ${SOURCES} ${DOC_GEN_FILE})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCASCADE_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE godot-cpp ${OpenCASCADE_LIBRARIES})
 
-# Install the complete bindings to the demo project with the correct suffix
-get_target_property(GODOTCPP_SUFFIX godot-cpp GODOTCPP_SUFFIX)
-set(OUTPUT_NAME "${PROJECT_NAME}${GODOTCPP_SUFFIX}")
-if (NOT DEFINED _INSTALL_TO_ROOT)
-    set(_INSTALL_TO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
-endif ()
-set(INSTALL_FOLDER "${_INSTALL_TO_ROOT}/demo/addons/${PROJECT_NAME}")
-message("Will install shared library to: ${INSTALL_FOLDER}")
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${OUTPUT_NAME}")
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION "${INSTALL_FOLDER}")
-# FIXME: Try harder to install to the proper directory on windows???
+    # Install the complete bindings to the demo project with the correct suffix
+    get_target_property(GODOTCPP_SUFFIX godot-cpp GODOTCPP_SUFFIX)
+    set(OUTPUT_NAME "${PROJECT_NAME}${GODOTCPP_SUFFIX}")
+    if (NOT DEFINED _INSTALL_TO_ROOT)
+        set(_INSTALL_TO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
+    endif ()
+    set(INSTALL_FOLDER "${_INSTALL_TO_ROOT}/demo/addons/${PROJECT_NAME}")
+    message("Will install shared library to: ${INSTALL_FOLDER}")
+    set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${OUTPUT_NAME}")
+    install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION "${INSTALL_FOLDER}")
+    # FIXME: Try harder to install to the proper directory on windows???
+endif()
