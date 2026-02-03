@@ -40,6 +40,14 @@ jobs:
 
     runs-on: "${{ matrix.target.os }}"
     steps:
+      - uses: "easimon/maximize-build-space@v10"
+        if: "matrix.target.os == 'ubuntu-24.04' || matrix.target.os == 'ubuntu-24.04-arm'"
+        with:
+          remove-dotnet: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
+    
       - uses: "actions/checkout@v5"
         with:
           submodules: "recursive"
