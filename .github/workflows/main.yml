@@ -40,13 +40,11 @@ jobs:
 
     runs-on: "${{ matrix.target.os }}"
     steps:
-      - uses: "easimon/maximize-build-space@v10"
-        if: "matrix.target.os == 'ubuntu-24.04' || matrix.target.os == 'ubuntu-24.04-arm'"
-        with:
-          remove-dotnet: 'true'
-          remove-haskell: 'true'
-          remove-codeql: 'true'
-          remove-docker-images: 'true'
+      - if: "matrix.target.os == 'ubuntu-24.04' || matrix.target.os == 'ubuntu-24.04-arm'"
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          sudo docker builder prune -a
     
       - uses: "actions/checkout@v5"
         with:
