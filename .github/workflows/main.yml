@@ -69,7 +69,7 @@ jobs:
           fi # Others use the native architecture
           sudo apt-get update && sudo apt-get install -y "libx11-dev${arch_selector}" "libgl1-mesa-dev${arch_selector}" "libfontconfig-dev${arch_selector}"
       - if: "matrix.target.os == 'windows-2025' && contains(matrix.target.vcpkg_triplet, '-mingw')"
-        uses: "egor-tensin/setup-mingw@v2"
+        uses: "egor-tensin/setup-mingw@v3"
         with:
           version: "12.2.0" # It seems like newer versions are broken (follow godot-cpp)
       - if: "matrix.target.os == 'windows-2025'"
