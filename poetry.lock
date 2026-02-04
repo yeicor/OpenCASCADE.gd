@@ -2,17 +2,17 @@
 
 [[package]]
 name = "clang"
-version = "20.1.5"
+version = "21.1.7"
 description = "libclang python bindings"
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "clang-20.1.5-py3-none-any.whl", hash = "sha256:b816c582ee8d230a7591386569cfb9311bf67339136aed7fd48264009da9c0b3"},
-    {file = "clang-20.1.5.tar.gz", hash = "sha256:1395dc8f51a4542644356cacae482d797b2e1b3f72ab7674af42de593a3dff7f"},
+    {file = "clang-21.1.7-py3-none-any.whl", hash = "sha256:23ee8f7b62af648009aee5139516b2a2a9320680dbce6e42a53e48bd5e8983ea"},
+    {file = "clang-21.1.7.tar.gz", hash = "sha256:01d5602b3fff77fef6d691a193d7aead4766b0f11d789d596200f3334a88f4b8"},
 ]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13"
-content-hash = "999043372429ddddd71a8286b0cf1bf126369478e69d5e4b249f7da9aa24498a"
+content-hash = "7da6b5899bf6495cc8115e155d2d67023ba18dbc381908d779423f3051697d55"
